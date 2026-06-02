@@ -8,7 +8,10 @@ import { motion } from 'motion/react';
 import { 
   BarChart3, LayoutDashboard, Car, LogOut, Clock, Layers, Users, Search, Plus, AlertCircle, ArrowRightCircle
 } from 'lucide-react';
+<<<<<<< HEAD
 import { fetchParkingUsers, ParkingUser } from '../services/userService';
+=======
+>>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
 
 interface DashboardViewProps {
   userSession: {
@@ -33,9 +36,12 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
   const [occupiedSpots, setOccupiedSpots] = useState(87);
   const [searchQuery, setSearchQuery] = useState('');
   const [logs, setLogs] = useState<ParkingLog[]>([]);
+<<<<<<< HEAD
   const [users, setUsers] = useState<ParkingUser[]>([]);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [usersLoading, setUsersLoading] = useState(false);
+=======
+>>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
 
   const [inputPlate, setInputPlate] = useState('');
   const [inputVehicle, setInputVehicle] = useState<'xe-o-to' | 'xe-may' | 'xe-ban-tai' | 'xe-dien'>('xe-o-to');
@@ -63,6 +69,7 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
     }
   };
 
+<<<<<<< HEAD
   const fetchUserList = async () => {
     setUsersLoading(true);
     setUsersError(null);
@@ -85,6 +92,13 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
     const interval = setInterval(() => {
       fetchParkingData();
       fetchUserList();
+=======
+  // Run on mount and establish a 4-second sync timer (polling)
+  useEffect(() => {
+    fetchParkingData();
+    const interval = setInterval(() => {
+      fetchParkingData();
+>>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
     }, 4000);
 
     return () => clearInterval(interval);
@@ -365,6 +379,7 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
           </div>
         </div>
       </div>
+<<<<<<< HEAD
 
       <div className="mt-8 bg-white rounded-2xl border border-gray-100 p-6 shadow-xs">
         <div className="flex items-center justify-between mb-4 gap-4">
@@ -419,6 +434,8 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
           </div>
         )}
       </div>
+=======
+>>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
     </motion.div>
   );
 }

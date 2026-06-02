@@ -34,6 +34,10 @@ body {
 }
 
 .animate-fade-in {
+<<<<<<< HEAD
   animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forward;
+=======
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+>>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
 }
 
