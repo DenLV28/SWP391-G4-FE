@@ -42,12 +42,6 @@ export default function InfoModal({ isOpen, title, content, onClose }: InfoModal
               <p className="whitespace-pre-line">{content}</p>
             </div>
 
-            {/* Footer action bar */}
-            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
-              <button
-                onClick={onClose}
-                className="px-5 py-2.5 bg-park-blue-600 hover:bg-park-blue-700 text-white font-medium text-sm rounded-lg shadow-sm transition-all active:scale-95 duration-200"
-              >
                 Đồng ý và Đóng
               </button>
             </div>
