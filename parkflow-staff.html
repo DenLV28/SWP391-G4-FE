@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ParkFlow — Staff Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --bg4: #30363d;
+    --border: #30363d;
+    --border2: #484f58;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --text3: #6e7681;
+    --accent: #1b6fe8;
+    --accent2: #388bfd;
+    --green: #3fb950;
+    --green2: #1a4f24;
+    --red: #f85149;
+    --red2: #4a1a1a;
+    --amber: #d29922;
+    --amber2: #3d2f0a;
+    --teal: #39d353;
+    --purple: #bc8cff;
+    --font: 'Barlow', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --cond: 'Barlow Condensed', sans-serif;
+    --radius: 8px;
+    --radius2: 12px;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* LAYOUT */
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .sidebar-logo {
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-text {
+    font-family: var(--cond);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--accent2);
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 2px;
+  }
+
+  .sidebar-staff {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .staff-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--cond);
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .staff-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .staff-role { font-size: 11px; color: var(--text3); }
+
+  .shift-badge {
+    margin: 10px 16px;
+    background: var(--green2);
+    border: 1px solid var(--green);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .shift-badge .label { color: var(--text3); margin-bottom: 2px; }
+  .shift-badge .value { color: var(--green); font-family: var(--mono); font-weight: 600; font-size: 13px; }
+
+  .nav { flex: 1; padding: 8px 0; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    position: relative;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--bg3); }
+
+  .nav-item.active {
+    color: var(--accent2);
+    background: rgba(56,139,253,0.08);
+    border-left-color: var(--accent2);
+  }
+
+  .nav-item i { font-size: 18px; }
+
+  .badge-count {
+    margin-left: auto;
+    background: var(--red);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 99px;
+    padding: 1px 6px;
+    font-family: var(--mono);
+  }
+
+  .sidebar-bottom {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .clock-display {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -1px;
+  }
+
+  .clock-date { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .page-title {
+    font-family: var(--cond);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text);
+  }
+
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent2); border-color: var(--accent2); }
+  .btn-ghost { background: transparent; color: var(--text2); border-color: var(--border2); }
+  .btn-ghost:hover { color: var(--text); background: var(--bg3); }
+  .btn-success { background: #1a4f24; color: var(--green); border-color: var(--green); }
+  .btn-success:hover { background: #2a6f34; }
+  .btn-danger { background: var(--red2); color: var(--red); border-color: var(--red); }
+  .btn-danger:hover { background: #6a2a2a; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-lg { padding: 10px 20px; font-size: 15px; }
+  .btn-block { width: 100%; justify-content: center; }
+  .btn i { font-size: 16px; }
+
+  .content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+  /* PANELS */
+  .panel-hidden { display: none !important; }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 14px 16px;
+  }
+
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 6px; }
+  .stat-value { font-family: var(--mono); font-size: 24px; font-weight: 600; color: var(--text); }
+  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .stat-green .stat-value { color: var(--green); }
+  .stat-amber .stat-value { color: var(--amber); }
+  .stat-red .stat-value { color: var(--red); }
+  .stat-blue .stat-value { color: var(--accent2); }
+
+  /* CHECKIN PANEL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 16px;
+  }
+
+  .card-title {
+    font-family: var(--cond);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text3);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title i { font-size: 16px; color: var(--accent2); }
+
+  /* FORM */
+  .form-group { margin-bottom: 12px; }
+  .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 5px; letter-spacing: 0.3px; }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 9px 12px;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  .form-input:focus { border-color: var(--accent2); box-shadow: 0 0 0 3px rgba(56,139,253,0.15); }
+  .form-input.plate-input { font-size: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; text-align: center; }
+  .form-input.plate-input::placeholder { font-size: 14px; letter-spacing: 0; font-weight: 400; text-transform: none; }
+
+  .vehicle-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+  .vtype-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 10px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    color: var(--text2);
+  }
+
+  .vtype-btn:hover { border-color: var(--accent2); color: var(--text); }
+
+  .vtype-btn.selected {
+    background: rgba(56,139,253,0.12);
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+
+  .vtype-btn i { display: block; font-size: 22px; margin-bottom: 4px; }
+  .vtype-btn span { font-size: 11px; font-weight: 600; }
+
+  /* TICKET DISPLAY */
+  .ticket {
+    background: var(--bg3);
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius2);
+    padding: 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ticket::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--green), var(--accent2), var(--purple));
+  }
+
+  .ticket-code {
+    font-family: var(--mono);
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 4px;
+    margin: 8px 0;
+  }
+
+  .ticket-plate {
+    font-family: var(--cond);
+    font-size: 28px;
+    font-weight: 700;
+    background: var(--bg);
+    border: 2px solid var(--amber);
+    border-radius: 6px;
+    display: inline-block;
+    padding: 4px 20px;
+    color: var(--amber);
+    letter-spacing: 4px;
+    margin: 8px 0;
+  }
+
+  .ticket-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ticket-row:last-child { border-bottom: none; }
+  .ticket-row .key { color: var(--text3); }
+  .ticket-row .val { color: var(--text); font-family: var(--mono); font-weight: 500; }
+
+  /* ACTIVE SESSIONS TABLE */
+  .table-wrap { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+  thead th {
+    background: var(--bg3);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:hover { background: var(--bg3); }
+  tbody td { padding: 10px 12px; color: var(--text2); }
+  tbody td.plate { font-family: var(--mono); font-weight: 600; color: var(--text); font-size: 14px; letter-spacing: 1px; }
+  tbody td.amount { font-family: var(--mono); color: var(--green); font-weight: 600; }
+  tbody td.time-cell { font-family: var(--mono); font-size: 12px; }
+
+  .vtype-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .tag-motorbike { background: rgba(210,153,34,0.15); color: var(--amber); }
+  .tag-car { background: rgba(56,139,253,0.15); color: var(--accent2); }
+  .tag-bicycle { background: rgba(63,185,80,0.15); color: var(--green); }
+  .tag-truck { background: rgba(188,140,255,0.15); color: var(--purple); }
+
+  /* CHECKOUT PANEL */
+  .search-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .search-bar .form-input { flex: 1; }
+
+  .fee-breakdown {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-top: 12px;
+  }
+
+  .fee-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .fee-row.total {
+    border-top: 1px solid var(--border2);
+    margin-top: 6px;
+    padding-top: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .fee-row .fee-val { font-family: var(--mono); }
+  .fee-row.total .fee-val { color: var(--green); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius2);
+    width: 480px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+    position: relative;
+  }
+
+  .modal-title {
+    font-family: var(--cond);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: none;
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 20px;
+    padding: 4px;
+    border-radius: 4px;
+  }
+
+  .modal-close:hover { color: var(--text); background: var(--bg3); }
+
+  /* SUCCESS RECEIPT */
+  .receipt {
+    background: var(--bg);
+    border: 1px solid var(--green);
+    border-radius: var(--radius2);
+    padding: 20px;
+  }
+
+  .receipt-header {
+    text-align: center;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border2);
+    margin-bottom: 12px;
+  }
+
+  .receipt-success {
+    width: 48px; height: 48px;
+    background: var(--green2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    font-size: 24px;
+    color: var(--green);
+  }
+
+  /* ALERTS */
+  .alert {
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .alert i { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+  .alert-warning { background: var(--amber2); border: 1px solid var(--amber); color: var(--amber); }
+  .alert-success { background: var(--green2); border: 1px solid var(--green); color: var(--green); }
+  .alert-error { background: var(--red2); border: 1px solid var(--red); color: var(--red); }
+  .alert-info { background: rgba(56,139,253,0.1); border: 1px solid var(--accent2); color: var(--accent2); }
+
+  /* NOTIFICATIONS */
+  .notif-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .notif-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .notif-icon {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+
+  .notif-icon.warn { background: var(--amber2); color: var(--amber); }
+  .notif-icon.err { background: var(--red2); color: var(--red); }
+  .notif-icon.ok { background: var(--green2); color: var(--green); }
+  .notif-icon.info { background: rgba(56,139,253,0.15); color: var(--accent2); }
+
+  .notif-body .notif-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .notif-body .notif-msg { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .notif-body .notif-time { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 4px; }
+
+  /* TOAST */
+  .toast-container { position: fixed; top: 16px; right: 16px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+
+  .toast {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 280px;
+    animation: slideIn 0.2s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  .toast.success { border-color: var(--green); }
+  .toast.error { border-color: var(--red); }
+  .toast.success i { color: var(--green); }
+  .toast.error i { color: var(--red); }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* OCCUPANCY BAR */
+  .occ-bar-wrap {
+    background: var(--bg3);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+
+  .occ-bar { height: 100%; border-radius: 4px; transition: width 0.5s; }
+  .occ-low { background: var(--green); }
+  .occ-mid { background: var(--amber); }
+  .occ-high { background: var(--red); }
+
+  /* PAYMENT METHOD */
+  .pay-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+
+  .pay-method {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+  }
+
+  .pay-method i { display: block; font-size: 20px; margin-bottom: 4px; }
+  .pay-method:hover { border-color: var(--accent2); color: var(--text); }
+  .pay-method.selected { background: rgba(56,139,253,0.12); border-color: var(--accent2); color: var(--accent2); }
+
+  /* SECTION DIVIDER */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: var(--cond);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text);
+  }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .dot-green { background: var(--green); }
+  .dot-red { background: var(--red); }
+  .dot-amber { background: var(--amber); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text3);
+  }
+
+  .empty-state i { font-size: 48px; margin-bottom: 12px; display: block; }
+  .empty-state p { font-size: 13px; }
+
+  /* HIGHLIGHT ROW */
+  tbody tr.highlight { animation: rowFlash 1.5s ease; }
+  @keyframes rowFlash {
+    0%, 100% { background: transparent; }
+    30% { background: rgba(56,139,253,0.15); }
+  }
+
+  /* QR MOCK */
+  .qr-mock {
+    width: 80px; height: 80px;
+    background: #fff;
+    border-radius: 6px;
+    margin: 8px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .qr-mock::before {
+    content: '';
+    width: 60px; height: 60px;
+    background:
+      repeating-linear-gradient(0deg, #000 0, #000 4px, #fff 4px, #fff 8px) 0 0 / 8px 8px,
+      repeating-linear-gradient(90deg, #000 0, #000 4px, #fff 4px, #fff 8px) 0 0 / 8px 8px;
+    background-blend-mode: multiply;
+  }
+
+  input[type="number"] { -moz-appearance: textfield; }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  .tab-row {
+    display: flex;
+    gap: 4px;
+    background: var(--bg3);
+    border-radius: var(--radius);
+    padding: 4px;
+    margin-bottom: 16px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 7px;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .tab-btn i { font-size: 15px; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { background: var(--accent); color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">PARKFLOW</div>
+      <div class="logo-sub">Staff Portal</div>
+    </div>
+
+    <div class="sidebar-staff">
+      <div class="staff-avatar">NV</div>
+      <div>
+        <div class="staff-name">Nguyễn Văn A</div>
+        <div class="staff-role">Nhân viên bảo vệ</div>
+      </div>
+    </div>
+
+    <div class="shift-badge">
+      <div class="label">Ca làm việc</div>
+      <div class="value" id="shiftLabel">CA SÁNG 06:00–14:00</div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-item active" onclick="showPanel('dashboard')">
+        <i class="ti ti-layout-dashboard"></i> Tổng quan
+      </div>
+      <div class="nav-item" onclick="showPanel('checkin')">
+        <i class="ti ti-login"></i> Nhận xe (Check-in)
+      </div>
+      <div class="nav-item" onclick="showPanel('checkout')">
+        <i class="ti ti-logout"></i> Trả xe (Check-out)
+      </div>
+      <div class="nav-item" onclick="showPanel('sessions')">
+        <i class="ti ti-car-garage"></i> Xe đang gửi
+        <span class="badge-count" id="sessionCountBadge">0</span>
+      </div>
+      <div class="nav-item" onclick="showPanel('notifications')">
+        <i class="ti ti-bell"></i> Thông báo
+        <span class="badge-count" id="notifBadge">3</span>
+      </div>
+      <div class="nav-item" onclick="showPanel('report')">
+        <i class="ti ti-report"></i> Báo cáo ca
+      </div>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="clock-display" id="clock">--:--:--</div>
+      <div class="clock-date" id="clockDate">Đang tải...</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="pageTitle">TỔNG QUAN CA LÀM VIỆC</div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="showPanel('checkout')">
+          <i class="ti ti-qrcode"></i> Quét mã ra xe
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="showPanel('checkin')">
+          <i class="ti ti-plus"></i> Nhận xe mới
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD PANEL -->
+      <div id="panel-dashboard">
+        <div class="stats-row">
+          <div class="stat-card stat-green">
+            <div class="stat-label">Xe nhận hôm nay</div>
+            <div class="stat-value" id="statCheckin">0</div>
+            <div class="stat-sub">Lượt gửi xe</div>
+          </div>
+          <div class="stat-card stat-blue">
+            <div class="stat-label">Đang gửi</div>
+            <div class="stat-value" id="statActive">0</div>
+            <div class="stat-sub">Xe trong bãi</div>
+          </div>
+          <div class="stat-card stat-amber">
+            <div class="stat-label">Doanh thu ca</div>
+            <div class="stat-value" id="statRevenue">0đ</div>
+            <div class="stat-sub">Ca hiện tại</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Tỉ lệ lấp đầy</div>
+            <div class="stat-value" id="statOcc">0%</div>
+            <div class="occ-bar-wrap">
+              <div class="occ-bar occ-low" id="occBar" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <!-- Capacity by type -->
+          <div class="card">
+            <div class="card-title"><i class="ti ti-chart-bar"></i> Sức chứa theo loại xe</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                  <span style="font-size:12px;color:var(--text2)">🛵 Xe máy</span>
+                  <span style="font-size:12px;font-family:var(--mono);color:var(--amber)" id="capMoto">0 / 300</span>
+                </div>
+                <div class="occ-bar-wrap"><div class="occ-bar occ-mid" id="barMoto" style="width:0%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                  <span style="font-size:12px;color:var(--text2)">🚗 Ô tô</span>
+                  <span style="font-size:12px;font-family:var(--mono);color:var(--accent2)" id="capCar">0 / 80</span>
+                </div>
+                <div class="occ-bar-wrap"><div class="occ-bar occ-low" id="barCar" style="width:0%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                  <span style="font-size:12px;color:var(--text2)">🚲 Xe đạp</span>
+                  <span style="font-size:12px;font-family:var(--mono);color:var(--green)" id="capBike">0 / 50</span>
+                </div>
+                <div class="occ-bar-wrap"><div class="occ-bar occ-low" id="barBike" style="width:0%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                  <span style="font-size:12px;color:var(--text2)">🚛 Xe tải/khách</span>
+                  <span style="font-size:12px;font-family:var(--mono);color:var(--purple)" id="capTruck">0 / 20</span>
+                </div>
+                <div class="occ-bar-wrap"><div class="occ-bar" style="background:var(--purple);width:0%" id="barTruck"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent activity -->
+          <div class="card">
+            <div class="card-title"><i class="ti ti-history"></i> Hoạt động gần đây</div>
+            <div id="recentActivity" style="display:flex;flex-direction:column;gap:8px">
+              <div class="empty-state" style="padding:20px">
+                <i class="ti ti-inbox" style="font-size:32px"></i>
+                <p>Chưa có hoạt động</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing reference -->
+        <div class="card" style="margin-top:16px">
+          <div class="card-title"><i class="ti ti-tag"></i> Bảng giá tham khảo</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Loại xe</th>
+                <th>Giờ đầu</th>
+                <th>Giờ tiếp theo</th>
+                <th>Ngày (tối đa)</th>
+                <th>Vé tháng</th>
+                <th>Qua đêm (+)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="vtype-tag tag-bicycle">🚲 Xe đạp</span></td>
+                <td class="amount">2.000đ</td><td>1.000đ</td><td>10.000đ</td><td>50.000đ</td><td>+5.000đ</td>
+              </tr>
+              <tr>
+                <td><span class="vtype-tag tag-motorbike">🛵 Xe máy</span></td>
+                <td class="amount">5.000đ</td><td>2.000đ</td><td>30.000đ</td><td>150.000đ</td><td>+10.000đ</td>
+              </tr>
+              <tr>
+                <td><span class="vtype-tag tag-car">🚗 Ô tô 4–7 chỗ</span></td>
+                <td class="amount">20.000đ</td><td>10.000đ</td><td>100.000đ</td><td>1.200.000đ</td><td>+30.000đ</td>
+              </tr>
+              <tr>
+                <td><span class="vtype-tag tag-truck">🚛 Xe tải/khách</span></td>
+                <td class="amount">30.000đ</td><td>15.000đ</td><td>150.000đ</td><td>—</td><td>+50.000đ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CHECKIN PANEL -->
+      <div id="panel-checkin" class="panel-hidden">
+        <div class="two-col">
+          <!-- Form -->
+          <div>
+            <div class="card">
+              <div class="card-title"><i class="ti ti-login"></i> Thông tin xe gửi</div>
+
+              <div class="form-group">
+                <label class="form-label">Loại xe *</label>
+                <div class="vehicle-type-grid">
+                  <div class="vtype-btn selected" onclick="selectVType(this,'bicycle')" data-type="bicycle">
+                    <i class="ti ti-bike"></i><span>Xe đạp</span>
+                  </div>
+                  <div class="vtype-btn" onclick="selectVType(this,'motorbike')" data-type="motorbike">
+                    <i class="ti ti-motorbike"></i><span>Xe máy</span>
+                  </div>
+                  <div class="vtype-btn" onclick="selectVType(this,'car')" data-type="car">
+                    <i class="ti ti-car"></i><span>Ô tô</span>
+                  </div>
+                  <div class="vtype-btn" onclick="selectVType(this,'truck')" data-type="truck">
+                    <i class="ti ti-truck"></i><span>Xe tải</span>
+                  </div>
+                  <div class="vtype-btn" onclick="selectVType(this,'bus')" data-type="bus">
+                    <i class="ti ti-bus"></i><span>Xe khách</span>
+                  </div>
+                  <div class="vtype-btn" onclick="selectVType(this,'electric')" data-type="electric">
+                    <i class="ti ti-bolt"></i><span>Xe điện</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Biển số xe</label>
+                <input class="form-input plate-input" id="plateInput" type="text" maxlength="12" placeholder="VD: 51A-12345" oninput="this.value=this.value.toUpperCase()">
+                <div style="font-size:11px;color:var(--text3);margin-top:4px">Để trống nếu xe không có biển (xe đạp)</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Vị trí đỗ</label>
+                <input class="form-input" id="slotInput" type="text" placeholder="VD: A-12, B-05">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Loại vé</label>
+                <select class="form-input" id="ticketType">
+                  <option value="hourly">Theo giờ (thông thường)</option>
+                  <option value="daily">Vé ngày (trọn ngày)</option>
+                  <option value="monthly">Vé tháng</option>
+                  <option value="overnight">Qua đêm</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Ghi chú (tình trạng xe)</label>
+                <input class="form-input" id="noteInput" type="text" placeholder="VD: Trầy bên phải, không gương chiếu hậu...">
+              </div>
+
+              <div style="margin-top:4px" id="capacityAlert"></div>
+
+              <button class="btn btn-success btn-block btn-lg" onclick="doCheckin()" style="margin-top:8px">
+                <i class="ti ti-login"></i> Nhận xe & in vé
+              </button>
+            </div>
+          </div>
+
+          <!-- Ticket preview -->
+          <div>
+            <div class="card">
+              <div class="card-title"><i class="ti ti-ticket"></i> Xem trước vé</div>
+              <div class="ticket" id="ticketPreview">
+                <div style="color:var(--text3);font-size:12px">Điền thông tin để xem vé</div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:12px">
+              <div class="card-title"><i class="ti ti-info-circle"></i> Quy định nhận xe</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.7">
+                <div style="margin-bottom:6px">✅ Kiểm tra biển số khớp với xe thực tế</div>
+                <div style="margin-bottom:6px">✅ Ghi nhận tình trạng xe (trầy, móp, ...)</div>
+                <div style="margin-bottom:6px">✅ Cấp vé cho khách, giữ liên vé</div>
+                <div style="margin-bottom:6px">⚠️ Không nhận xe khi bãi đầy (>95%)</div>
+                <div style="margin-bottom:6px">⚠️ Xe tải/khách cần xác nhận slot trước</div>
+                <div>🚨 Báo cáo ngay nếu biển số không hợp lệ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHECKOUT PANEL -->
+      <div id="panel-checkout" class="panel-hidden">
+        <div class="two-col">
+          <!-- Search & Fee -->
+          <div>
+            <div class="card">
+              <div class="card-title"><i class="ti ti-search"></i> Tìm xe cần trả</div>
+
+              <div class="tab-row">
+                <button class="tab-btn active" onclick="setSearchMode('ticket',this)"><i class="ti ti-ticket"></i> Mã vé</button>
+                <button class="tab-btn" onclick="setSearchMode('plate',this)"><i class="ti ti-license"></i> Biển số</button>
+              </div>
+
+              <div class="search-bar">
+                <input class="form-input" id="checkoutSearch" type="text" placeholder="Nhập mã vé hoặc biển số..." oninput="searchVehicle(this.value)">
+                <button class="btn btn-primary" onclick="searchVehicle(document.getElementById('checkoutSearch').value)">
+                  <i class="ti ti-search"></i>
+                </button>
+              </div>
+
+              <div id="foundVehicle"></div>
+            </div>
+          </div>
+
+          <!-- Payment -->
+          <div>
+            <div class="card" id="paymentCard" style="display:none">
+              <div class="card-title"><i class="ti ti-receipt"></i> Thanh toán</div>
+
+              <div class="fee-breakdown" id="feeBreakdown"></div>
+
+              <div style="margin-top:14px">
+                <label class="form-label">Phương thức thanh toán</label>
+                <div class="pay-methods">
+                  <div class="pay-method selected" onclick="selectPay(this,'cash')">
+                    <i class="ti ti-cash"></i> Tiền mặt
+                  </div>
+                  <div class="pay-method" onclick="selectPay(this,'transfer')">
+                    <i class="ti ti-transfer"></i> Chuyển khoản
+                  </div>
+                  <div class="pay-method" onclick="selectPay(this,'momo')">
+                    <i class="ti ti-wallet"></i> Ví điện tử
+                  </div>
+                  <div class="pay-method" onclick="selectPay(this,'card')">
+                    <i class="ti ti-credit-card"></i> Thẻ
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Khách đưa (tiền mặt)</label>
+                <input class="form-input" id="cashGiven" type="number" step="1000" placeholder="0" oninput="calcChange()">
+              </div>
+
+              <div id="changeDisplay" style="display:none;margin-bottom:12px">
+                <div class="alert alert-success">
+                  <i class="ti ti-coins"></i>
+                  <span>Tiền thừa: <strong id="changeAmount">0đ</strong></span>
+                </div>
+              </div>
+
+              <button class="btn btn-success btn-block btn-lg" onclick="doCheckout()">
+                <i class="ti ti-logout"></i> Xác nhận trả xe
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SESSIONS PANEL -->
+      <div id="panel-sessions" class="panel-hidden">
+        <div class="section-header">
+          <div class="section-title">
+            <span class="dot dot-green"></span>Xe đang gửi trong bãi
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select class="form-input" id="filterType" onchange="renderSessionsTable()" style="width:auto;padding:6px 10px;font-size:12px">
+              <option value="">Tất cả loại xe</option>
+              <option value="bicycle">Xe đạp</option>
+              <option value="motorbike">Xe máy</option>
+              <option value="car">Ô tô</option>
+              <option value="truck">Xe tải</option>
+              <option value="bus">Xe khách</option>
+              <option value="electric">Xe điện</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="renderSessionsTable()">
+              <i class="ti ti-refresh"></i> Làm mới
+            </button>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0">
+          <div class="table-wrap">
+            <table id="sessionsTable">
+              <thead>
+                <tr>
+                  <th>Mã vé</th>
+                  <th>Loại xe</th>
+                  <th>Biển số</th>
+                  <th>Vị trí</th>
+                  <th>Giờ vào</th>
+                  <th>Thời gian</th>
+                  <th>Tạm tính</th>
+                  <th>Loại vé</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="sessionsTbody">
+                <tr><td colspan="9"><div class="empty-state"><i class="ti ti-car-garage"></i><p>Chưa có xe nào đang gửi</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS PANEL -->
+      <div id="panel-notifications" class="panel-hidden">
+        <div class="section-header">
+          <div class="section-title">Thông báo & Cảnh báo</div>
+          <button class="btn btn-ghost btn-sm" onclick="clearNotifs()"><i class="ti ti-check"></i> Đánh dấu tất cả đã đọc</button>
+        </div>
+        <div class="notif-list" id="notifList"></div>
+      </div>
+
+      <!-- REPORT PANEL -->
+      <div id="panel-report" class="panel-hidden">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title"><i class="ti ti-report-analytics"></i> Tổng kết ca làm việc</div>
+            <div style="display:flex;flex-direction:column;gap:10px" id="reportData"></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-chart-pie"></i> Theo loại xe</div>
+            <div id="reportByType"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-title"><i class="ti ti-notes"></i> Ghi chú bàn giao ca</div>
+          <textarea class="form-input" id="handoverNote" rows="4" style="font-family:var(--font);resize:vertical" placeholder="Ghi chú cho ca tiếp theo: tình hình bãi, sự cố, xe đặc biệt cần chú ý..."></textarea>
+          <button class="btn btn-primary" style="margin-top:10px" onclick="submitReport()">
+            <i class="ti ti-send"></i> Gửi báo cáo bàn giao
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- RECEIPT MODAL -->
+<div class="modal-overlay" id="receiptModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('receiptModal')"><i class="ti ti-x"></i></button>
+    <div class="modal-title">Vé gửi xe</div>
+    <div id="receiptContent"></div>
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button class="btn btn-primary btn-block" onclick="closeModal('receiptModal');showToast('Đã in vé thành công','success')">
+        <i class="ti ti-printer"></i> In vé
+      </button>
+      <button class="btn btn-ghost" onclick="closeModal('receiptModal')">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKOUT RECEIPT MODAL -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('checkoutModal')"><i class="ti ti-x"></i></button>
+    <div class="modal-title">Biên lai trả xe</div>
+    <div id="checkoutReceiptContent"></div>
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button class="btn btn-primary btn-block" onclick="closeModal('checkoutModal');showToast('Đã in biên lai','success')">
+        <i class="ti ti-printer"></i> In biên lai
+      </button>
+      <button class="btn btn-ghost" onclick="closeModal('checkoutModal')">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== DATA & CONFIG ====================
+
+const PRICING = {
+  bicycle:   { first: 2000,  next: 1000,  dailyMax: 10000,  monthly: 50000,   overnight: 5000  },
+  motorbike: { first: 5000,  next: 2000,  dailyMax: 30000,  monthly: 150000,  overnight: 10000 },
+  electric:  { first: 5000,  next: 2000,  dailyMax: 30000,  monthly: 150000,  overnight: 10000 },
+  car:       { first: 20000, next: 10000, dailyMax: 100000, monthly: 1200000, overnight: 30000 },
+  truck:     { first: 30000, next: 15000, dailyMax: 150000, monthly: null,    overnight: 50000 },
+  bus:       { first: 30000, next: 15000, dailyMax: 150000, monthly: null,    overnight: 50000 },
+};
+
+const CAPACITY = {
+  bicycle: 50, motorbike: 300, electric: 300, car: 80, truck: 20, bus: 20
+};
+
+const TYPE_LABELS = {
+  bicycle: '🚲 Xe đạp', motorbike: '🛵 Xe máy', electric: '⚡ Xe điện',
+  car: '🚗 Ô tô', truck: '🚛 Xe tải', bus: '🚌 Xe khách'
+};
+
+let sessions = []; // active parking sessions
+let completed = []; // completed sessions
+let activities = [];
+let notifications = [
+  { type: 'warn', icon: 'ti-alert-triangle', title: 'Bãi xe máy gần đầy', msg: 'Khu vực A đã đạt 85% sức chứa. Hướng dẫn xe vào khu B.', time: '08:42', read: false },
+  { type: 'err', icon: 'ti-alert-circle', title: 'Xe 51A-99887 quá hạn', msg: 'Xe đã gửi hơn 24 giờ, cần xử lý hoặc liên hệ chủ xe.', time: '07:15', read: false },
+  { type: 'info', icon: 'ti-info-circle', title: 'Bàn giao ca', msg: 'Ca sáng bắt đầu. Nhân viên Nguyễn Văn A đăng nhập thành công.', time: '06:00', read: false },
+];
+
+let selectedVType = 'bicycle';
+let selectedPayMethod = 'cash';
+let currentCheckoutSession = null;
+let searchMode = 'ticket';
+let shiftRevenue = 0;
+let shiftStart = new Date();
+
+// Seed some initial sessions
+function seedData() {
+  const types = ['motorbike','motorbike','motorbike','car','bicycle','motorbike'];
+  const plates = ['51A-12345','51B-98765','51C-44433','51G-11111','','51D-55667'];
+  const slots = ['A-01','A-02','A-03','B-01','C-05','A-05'];
+  const ticketTypes = ['hourly','hourly','hourly','hourly','hourly','daily'];
+  const offsets = [120, 45, 200, 30, 90, 480];
+
+  types.forEach((t, i) => {
+    const checkinTime = new Date(Date.now() - offsets[i] * 60000);
+    sessions.push({
+      id: 'TK' + String(1000 + i),
+      type: t,
+      plate: plates[i],
+      slot: slots[i],
+      ticketType: ticketTypes[i],
+      note: '',
+      checkinTime,
+      staff: 'Nguyễn Văn A',
+    });
+  });
+  updateStats();
+  renderSessionsTable();
+}
+
+// ==================== UTILITIES ====================
+
+function fmt(n) { return Number(n).toLocaleString('vi-VN') + 'đ'; }
+
+function fmtDuration(ms) {
+  const total = Math.floor(ms / 60000);
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  if (h === 0) return m + ' phút';
+  return h + 'g ' + m + 'ph';
+}
+
+function fmtTime(d) {
+  return d.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'});
+}
+
+function fmtDateTime(d) {
+  return d.toLocaleDateString('vi-VN') + ' ' + fmtTime(d);
+}
+
+function genId() {
+  return 'TK' + String(Math.floor(Math.random() * 90000) + 10000);
+}
+
+function calcFee(session, checkoutTime) {
+  const p = PRICING[session.type] || PRICING.motorbike;
+  const ms = checkoutTime - session.checkinTime;
+  const hours = ms / (1000 * 60 * 60);
+  const minutes = ms / (1000 * 60);
+
+  if (session.ticketType === 'monthly') {
+    return { base: p.monthly || 0, overnight: 0, total: p.monthly || 0, hours, label: 'Vé tháng' };
+  }
+  if (session.ticketType === 'daily') {
+    const days = Math.ceil(hours / 24);
+    const base = p.dailyMax * days;
+    return { base, overnight: 0, total: base, hours, label: 'Vé ngày x' + days };
+  }
+  if (session.ticketType === 'overnight') {
+    const overnightFee = p.overnight;
+    const extra = hours > 12 ? Math.ceil(hours - 12) * p.next : 0;
+    return { base: p.dailyMax, overnight: overnightFee, total: p.dailyMax + overnightFee + extra, hours, label: 'Qua đêm' };
+  }
+
+  // Hourly
+  if (minutes <= 15) {
+    return { base: 0, overnight: 0, total: 0, hours, label: 'Miễn phí (<15 phút)' };
+  }
+  let fee = p.first;
+  if (hours > 1) {
+    const extraHours = Math.ceil(hours - 1);
+    fee += extraHours * p.next;
+  }
+  fee = Math.min(fee, p.dailyMax);
+  const isOvernight = isOvernightParking(session.checkinTime, checkoutTime);
+  const overnightFee = isOvernight ? p.overnight : 0;
+  return { base: fee, overnight: overnightFee, total: fee + overnightFee, hours, label: 'Theo giờ' };
+}
+
+function isOvernightParking(start, end) {
+  const midnight = new Date(start);
+  midnight.setHours(23, 0, 0, 0);
+  return end > midnight;
+}
+
+function getTypeTag(type) {
+  const classes = {
+    bicycle: 'tag-bicycle', motorbike: 'tag-motorbike',
+    electric: 'tag-motorbike', car: 'tag-car',
+    truck: 'tag-truck', bus: 'tag-truck'
+  };
+  return `<span class="vtype-tag ${classes[type]||'tag-motorbike'}">${TYPE_LABELS[type]||type}</span>`;
+}
+
+// ==================== CLOCK ====================
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('vi-VN');
+  document.getElementById('clockDate').textContent = now.toLocaleDateString('vi-VN', {
+    weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+  });
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+
+// ==================== STATS ====================
+
+function updateStats() {
+  const total = sessions.length;
+  document.getElementById('statActive').textContent = total;
+  document.getElementById('sessionCountBadge').textContent = total;
+
+  const totalCap = Object.values(CAPACITY).reduce((a,b) => a + b, 0);
+  const occ = totalCap > 0 ? Math.round(total / totalCap * 100) : 0;
+  document.getElementById('statOcc').textContent = occ + '%';
+  const bar = document.getElementById('occBar');
+  bar.style.width = occ + '%';
+  bar.className = 'occ-bar ' + (occ >= 90 ? 'occ-high' : occ >= 70 ? 'occ-mid' : 'occ-low');
+
+  const totalCheckin = sessions.length + completed.length;
+  document.getElementById('statCheckin').textContent = totalCheckin;
+  document.getElementById('statRevenue').textContent = fmt(shiftRevenue);
+
+  // Per-type capacity bars
+  const types = ['motorbike','car','bicycle','truck'];
+  types.forEach(t => {
+    const count = sessions.filter(s => s.type === t || (t === 'motorbike' && (s.type === 'electric'))).length;
+    const cap = CAPACITY[t] || 20;
+    const pct = Math.min(Math.round(count / cap * 100), 100);
+    const capEl = document.getElementById('cap' + t.charAt(0).toUpperCase() + t.slice(1));
+    const barEl = document.getElementById('bar' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (capEl) capEl.textContent = count + ' / ' + cap;
+    if (barEl) {
+      barEl.style.width = pct + '%';
+      barEl.className = 'occ-bar ' + (pct >= 90 ? 'occ-high' : pct >= 70 ? 'occ-mid' : 'occ-low');
+    }
+  });
+}
+
+// ==================== NAVIGATION ====================
+
+const PANEL_TITLES = {
+  dashboard: 'TỔNG QUAN CA LÀM VIỆC',
+  checkin: 'NHẬN XE (CHECK-IN)',
+  checkout: 'TRẢ XE (CHECK-OUT)',
+  sessions: 'DANH SÁCH XE ĐANG GỬI',
+  notifications: 'THÔNG BÁO & CẢNH BÁO',
+  report: 'BÁO CÁO CA LÀM VIỆC',
+};
+
+function showPanel(name) {
+  document.querySelectorAll('[id^="panel-"]').forEach(p => p.classList.add('panel-hidden'));
+  document.getElementById('panel-' + name).classList.remove('panel-hidden');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.includes(PANEL_TITLES[name]?.split(' ')[0]) || n.onclick?.toString().includes(name)) {
+      n.classList.add('active');
+    }
+  });
+  document.getElementById('pageTitle').textContent = PANEL_TITLES[name] || name.toUpperCase();
+
+  if (name === 'sessions') renderSessionsTable();
+  if (name === 'notifications') renderNotifications();
+  if (name === 'report') renderReport();
+  if (name === 'dashboard') renderRecentActivity();
+}
+
+// force nav active by click
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', function() {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// ==================== CHECKIN ====================
+
+function selectVType(el, type) {
+  document.querySelectorAll('.vtype-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedVType = type;
+  checkCapacity();
+  updateTicketPreview();
+}
+
+function checkCapacity() {
+  const count = sessions.filter(s => s.type === selectedVType).length;
+  const cap = CAPACITY[selectedVType] || 50;
+  const pct = count / cap * 100;
+  const alert = document.getElementById('capacityAlert');
+  if (pct >= 95) {
+    alert.innerHTML = `<div class="alert alert-error"><i class="ti ti-ban"></i><span>BÃI ĐẦY: Không thể nhận thêm ${TYPE_LABELS[selectedVType]}. Đang chiếm ${count}/${cap} chỗ.</span></div>`;
+  } else if (pct >= 80) {
+    alert.innerHTML = `<div class="alert alert-warning"><i class="ti ti-alert-triangle"></i><span>Gần đầy: ${count}/${cap} chỗ (${Math.round(pct)}%). Hướng dẫn khách vào khu trống.</span></div>`;
+  } else {
+    alert.innerHTML = `<div class="alert alert-success"><i class="ti ti-circle-check"></i><span>Còn chỗ: ${cap - count}/${cap} chỗ trống cho ${TYPE_LABELS[selectedVType]}</span></div>`;
+  }
+}
+
+function updateTicketPreview() {
+  const plate = document.getElementById('plateInput').value || '—';
+  const slot = document.getElementById('slotInput').value || 'Chưa xác định';
+  const p = PRICING[selectedVType] || PRICING.motorbike;
+  const now = new Date();
+
+  document.getElementById('ticketPreview').innerHTML = `
+    <div style="font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase">PARKFLOW — VÉ GỬI XE</div>
+    <div class="ticket-plate">${plate}</div>
+    <div style="margin:8px 0">
+      <div class="qr-mock"></div>
+      <div style="font-size:10px;color:var(--text3)">Mã QR — quét khi lấy xe</div>
+    </div>
+    <div style="border-top:1px dashed var(--border2);margin:10px 0;padding-top:10px;text-align:left">
+      <div class="ticket-row"><span class="key">Loại xe</span><span class="val">${TYPE_LABELS[selectedVType]}</span></div>
+      <div class="ticket-row"><span class="key">Vị trí</span><span class="val">${slot}</span></div>
+      <div class="ticket-row"><span class="key">Giờ vào</span><span class="val">${fmtTime(now)}</span></div>
+      <div class="ticket-row"><span class="key">Ngày</span><span class="val">${now.toLocaleDateString('vi-VN')}</span></div>
+      <div class="ticket-row"><span class="key">Giá đầu</span><span class="val">${fmt(p.first)}</span></div>
+    </div>
+    <div style="font-size:10px;color:var(--text3)">Giữ vé để lấy xe. Mất vé phạt 50.000đ</div>
+  `;
+}
+
+document.getElementById('plateInput').addEventListener('input', updateTicketPreview);
+document.getElementById('slotInput').addEventListener('input', updateTicketPreview);
+
+function doCheckin() {
+  const plate = document.getElementById('plateInput').value.trim();
+  const slot = document.getElementById('slotInput').value.trim();
+  const ticketType = document.getElementById('ticketType').value;
+  const note = document.getElementById('noteInput').value.trim();
+
+  const count = sessions.filter(s => s.type === selectedVType).length;
+  const cap = CAPACITY[selectedVType] || 50;
+  if (count / cap >= 0.95) {
+    showToast('Bãi đầy! Không thể nhận thêm xe loại này', 'error');
+    return;
+  }
+
+  if (!slot) {
+    showToast('Vui lòng nhập vị trí đỗ xe', 'error');
+    return;
+  }
+
+  const session = {
+    id: genId(),
+    type: selectedVType,
+    plate: plate || '—',
+    slot,
+    ticketType,
+    note,
+    checkinTime: new Date(),
+    staff: 'Nguyễn Văn A',
+  };
+
+  sessions.push(session);
+
+  addActivity('in', session);
+  updateStats();
+  renderSessionsTable();
+
+  // Show receipt modal
+  showCheckinReceipt(session);
+
+  // Reset form
+  document.getElementById('plateInput').value = '';
+  document.getElementById('slotInput').value = '';
+  document.getElementById('noteInput').value = '';
+  updateTicketPreview();
+  checkCapacity();
+
+  showToast('Nhận xe thành công! Mã vé: ' + session.id, 'success');
+}
+
+function showCheckinReceipt(session) {
+  const p = PRICING[session.type] || PRICING.motorbike;
+  document.getElementById('receiptContent').innerHTML = `
+    <div class="receipt">
+      <div class="receipt-header">
+        <div class="receipt-success"><i class="ti ti-check"></i></div>
+        <div style="font-family:var(--cond);font-size:18px;font-weight:700;color:var(--green)">Nhận xe thành công</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px">${fmtDateTime(session.checkinTime)}</div>
+      </div>
+      <div class="ticket-plate" style="margin:8px 0">${session.plate}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
+        <div class="ticket-row"><span class="key">Mã vé</span><span class="val" style="color:var(--accent2);font-size:16px">${session.id}</span></div>
+        <div class="ticket-row"><span class="key">Loại xe</span><span class="val">${TYPE_LABELS[session.type]}</span></div>
+        <div class="ticket-row"><span class="key">Vị trí</span><span class="val">${session.slot}</span></div>
+        <div class="ticket-row"><span class="key">Giờ vào</span><span class="val">${fmtTime(session.checkinTime)}</span></div>
+        <div class="ticket-row"><span class="key">Giá/giờ đầu</span><span class="val">${fmt(p.first)}</span></div>
+        <div class="ticket-row"><span class="key">Giờ tiếp</span><span class="val">${fmt(p.next)}/giờ</span></div>
+        <div class="ticket-row"><span class="key">Tối đa/ngày</span><span class="val">${fmt(p.dailyMax)}</span></div>
+        ${session.note ? `<div class="ticket-row"><span class="key">Ghi chú</span><span class="val" style="color:var(--amber);font-size:12px">${session.note}</span></div>` : ''}
+      </div>
+      <div class="alert alert-warning" style="margin-top:12px;font-size:11px">
+        <i class="ti ti-alert-triangle"></i> Mất vé phạt 50.000đ. Không chịu trách nhiệm tài sản bên trong xe.
+      </div>
+    </div>
+  `;
+  document.getElementById('receiptModal').classList.add('open');
+}
+
+// ==================== CHECKOUT ====================
+
+function setSearchMode(mode, el) {
+  searchMode = mode;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('checkoutSearch').placeholder = mode === 'ticket' ? 'Nhập mã vé (VD: TK10001)' : 'Nhập biển số (VD: 51A-12345)';
+  document.getElementById('foundVehicle').innerHTML = '';
+  document.getElementById('paymentCard').style.display = 'none';
+  document.getElementById('checkoutSearch').value = '';
+  currentCheckoutSession = null;
+}
+
+function searchVehicle(query) {
+  query = query.toUpperCase().trim();
+  if (!query) { document.getElementById('foundVehicle').innerHTML = ''; return; }
+
+  let found = null;
+  if (searchMode === 'ticket') {
+    found = sessions.find(s => s.id === query);
+  } else {
+    found = sessions.find(s => s.plate.replace(/\s/g,'') === query.replace(/\s/g,''));
+  }
+
+  if (!found) {
+    document.getElementById('foundVehicle').innerHTML = `<div class="alert alert-error"><i class="ti ti-search-off"></i><span>Không tìm thấy xe. Kiểm tra lại mã vé hoặc biển số.</span></div>`;
+    document.getElementById('paymentCard').style.display = 'none';
+    currentCheckoutSession = null;
+    return;
+  }
+
+  currentCheckoutSession = found;
+  const now = new Date();
+  const fee = calcFee(found, now);
+  const duration = fmtDuration(now - found.checkinTime);
+
+  document.getElementById('foundVehicle').innerHTML = `
+    <div class="card" style="background:var(--bg3);padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div class="ticket-plate" style="font-size:20px;padding:3px 14px;margin:0">${found.plate}</div>
+          <div style="margin-top:6px">${getTypeTag(found.type)}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--green)">${fmt(fee.total)}</div>
+          <div style="font-size:11px;color:var(--text3)">${duration}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div class="ticket-row"><span class="key">Mã vé</span><span class="val">${found.id}</span></div>
+        <div class="ticket-row"><span class="key">Vị trí</span><span class="val">${found.slot}</span></div>
+        <div class="ticket-row"><span class="key">Giờ vào</span><span class="val">${fmtDateTime(found.checkinTime)}</span></div>
+        <div class="ticket-row"><span class="key">Thời gian gửi</span><span class="val">${duration}</span></div>
+        ${found.note ? `<div class="alert alert-warning" style="margin-top:4px;font-size:11px"><i class="ti ti-alert-triangle"></i>${found.note}</div>` : ''}
+      </div>
+    </div>
+  `;
+
+  renderFeeBreakdown(found, fee);
+  document.getElementById('paymentCard').style.display = 'block';
+  document.getElementById('cashGiven').value = '';
+  document.getElementById('changeDisplay').style.display = 'none';
+}
+
+function renderFeeBreakdown(session, fee) {
+  const now = new Date();
+  const rows = [];
+  const p = PRICING[session.type] || PRICING.motorbike;
+
+  rows.push({ k: 'Giờ đầu', v: fmt(p.first) });
+  if (fee.hours > 1) {
+    const extra = Math.ceil(fee.hours - 1);
+    rows.push({ k: `${extra} giờ tiếp (x${fmt(p.next)})`, v: fmt(extra * p.next) });
+    if (fee.base < extra * p.next + p.first) {
+      rows.push({ k: 'Giảm xuống mức tối đa ngày', v: '—' });
+    }
+  }
+  if (fee.overnight) {
+    rows.push({ k: 'Phụ phí qua đêm', v: fmt(fee.overnight) });
+  }
+
+  document.getElementById('feeBreakdown').innerHTML = `
+    ${rows.map(r => `<div class="fee-row"><span>${r.k}</span><span class="fee-val">${r.v}</span></div>`).join('')}
+    <div class="fee-row total"><span>TỔNG CỘNG</span><span class="fee-val">${fmt(fee.total)}</span></div>
+  `;
+}
+
+function calcChange() {
+  if (!currentCheckoutSession) return;
+  const given = parseInt(document.getElementById('cashGiven').value) || 0;
+  const now = new Date();
+  const fee = calcFee(currentCheckoutSession, now);
+  const change = given - fee.total;
+
+  if (given > 0) {
+    document.getElementById('changeDisplay').style.display = 'block';
+    if (change >= 0) {
+      document.getElementById('changeAmount').textContent = fmt(change);
+      document.getElementById('changeDisplay').innerHTML = `<div class="alert alert-success"><i class="ti ti-coins"></i><span>Tiền thừa: <strong>${fmt(change)}</strong></span></div>`;
+    } else {
+      document.getElementById('changeDisplay').innerHTML = `<div class="alert alert-error"><i class="ti ti-alert-circle"></i><span>Thiếu: <strong>${fmt(-change)}</strong></span></div>`;
+    }
+  } else {
+    document.getElementById('changeDisplay').style.display = 'none';
+  }
+}
+
+function selectPay(el, method) {
+  document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPayMethod = method;
+  const cashGroup = document.querySelector('#cashGiven').closest('.form-group');
+  cashGroup.style.display = method === 'cash' ? 'block' : 'none';
+}
+
+function doCheckout() {
+  if (!currentCheckoutSession) { showToast('Vui lòng tìm xe cần trả trước', 'error'); return; }
+
+  const now = new Date();
+  const fee = calcFee(currentCheckoutSession, now);
+
+  if (selectedPayMethod === 'cash') {
+    const given = parseInt(document.getElementById('cashGiven').value) || 0;
+    if (given < fee.total && given > 0) {
+      showToast('Số tiền khách đưa không đủ!', 'error');
+      return;
+    }
+  }
+
+  const session = currentCheckoutSession;
+  session.checkoutTime = now;
+  session.fee = fee.total;
+  session.payMethod = selectedPayMethod;
+
+  sessions = sessions.filter(s => s.id !== session.id);
+  completed.push(session);
+  shiftRevenue += fee.total;
+
+  addActivity('out', session, fee.total);
+  updateStats();
+  renderSessionsTable();
+
+  showCheckoutReceipt(session, fee, now);
+
+  document.getElementById('checkoutSearch').value = '';
+  document.getElementById('foundVehicle').innerHTML = '';
+  document.getElementById('paymentCard').style.display = 'none';
+  currentCheckoutSession = null;
+
+  showToast('Trả xe thành công! Thu: ' + fmt(fee.total), 'success');
+}
+
+function showCheckoutReceipt(session, fee, checkoutTime) {
+  const payLabels = { cash: 'Tiền mặt', transfer: 'Chuyển khoản', momo: 'Ví điện tử', card: 'Thẻ' };
+  document.getElementById('checkoutReceiptContent').innerHTML = `
+    <div class="receipt">
+      <div class="receipt-header">
+        <div class="receipt-success"><i class="ti ti-circle-check"></i></div>
+        <div style="font-family:var(--cond);font-size:18px;font-weight:700;color:var(--green)">Trả xe thành công</div>
+        <div style="font-size:12px;color:var(--text3)">${fmtDateTime(checkoutTime)}</div>
+      </div>
+      <div class="ticket-plate" style="margin:8px 0">${session.plate}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
+        <div class="ticket-row"><span class="key">Mã vé</span><span class="val">${session.id}</span></div>
+        <div class="ticket-row"><span class="key">Loại xe</span><span class="val">${TYPE_LABELS[session.type]}</span></div>
+        <div class="ticket-row"><span class="key">Giờ vào</span><span class="val">${fmtDateTime(session.checkinTime)}</span></div>
+        <div class="ticket-row"><span class="key">Giờ ra</span><span class="val">${fmtDateTime(checkoutTime)}</span></div>
+        <div class="ticket-row"><span class="key">Thời gian gửi</span><span class="val">${fmtDuration(checkoutTime - session.checkinTime)}</span></div>
+        <div class="ticket-row"><span class="key">Phương thức</span><span class="val">${payLabels[session.payMethod]}</span></div>
+        <div class="fee-row total" style="margin-top:8px"><span>TỔNG TIỀN</span><span class="fee-val">${fmt(fee.total)}</span></div>
+      </div>
+      <div class="alert alert-info" style="margin-top:12px;font-size:11px">
+        <i class="ti ti-star"></i> Cảm ơn quý khách đã sử dụng dịch vụ ParkFlow!
+      </div>
+    </div>
+  `;
+  document.getElementById('checkoutModal').classList.add('open');
+}
+
+// ==================== SESSIONS TABLE ====================
+
+function renderSessionsTable() {
+  const filter = document.getElementById('filterType').value;
+  const filtered = filter ? sessions.filter(s => s.type === filter) : sessions;
+  const tbody = document.getElementById('sessionsTbody');
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="ti ti-car-garage"></i><p>Không có xe nào</p></div></td></tr>`;
+    return;
+  }
+
+  const now = new Date();
+  tbody.innerHTML = filtered.map(s => {
+    const fee = calcFee(s, now);
+    const duration = fmtDuration(now - s.checkinTime);
+    const isLong = (now - s.checkinTime) > 8 * 60 * 60 * 1000;
+    return `
+      <tr ${isLong ? 'style="background:rgba(248,81,73,0.04)"' : ''}>
+        <td style="font-family:var(--mono);color:var(--accent2);font-weight:600">${s.id}</td>
+        <td>${getTypeTag(s.type)}</td>
+        <td class="plate">${s.plate}</td>
+        <td style="font-family:var(--mono);color:var(--text3)">${s.slot}</td>
+        <td class="time-cell">${fmtTime(s.checkinTime)}</td>
+        <td class="time-cell" ${isLong ? 'style="color:var(--amber)"' : ''}>${duration}</td>
+        <td class="amount">${fmt(fee.total)}</td>
+        <td><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--bg3);color:var(--text3)">${ticketTypeLabel(s.ticketType)}</span></td>
+        <td>
+          <button class="btn btn-sm btn-ghost" onclick="quickCheckout('${s.id}')" title="Trả xe">
+            <i class="ti ti-logout"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function ticketTypeLabel(t) {
+  return { hourly: 'Theo giờ', daily: 'Ngày', monthly: 'Tháng', overnight: 'Đêm' }[t] || t;
+}
+
+function quickCheckout(id) {
+  showPanel('checkout');
+  setSearchMode('ticket', document.querySelector('.tab-btn'));
+  document.querySelector('.tab-btn').classList.add('active');
+  document.getElementById('checkoutSearch').value = id;
+  searchVehicle(id);
+}
+
+// ==================== ACTIVITIES ====================
+
+function addActivity(type, session, fee) {
+  const now = new Date();
+  activities.unshift({
+    type,
+    session: { ...session },
+    fee,
+    time: now,
+  });
+  if (activities.length > 20) activities.pop();
+  renderRecentActivity();
+}
+
+function renderRecentActivity() {
+  const el = document.getElementById('recentActivity');
+  if (!activities.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:20px"><i class="ti ti-inbox" style="font-size:32px"></i><p>Chưa có hoạt động</p></div>`;
+    return;
+  }
+  el.innerHTML = activities.slice(0, 8).map(a => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;
+        background:${a.type==='in'?'var(--green2)':'rgba(56,139,253,0.15)'};
+        color:${a.type==='in'?'var(--green)':'var(--accent2)'}">
+        <i class="ti ti-${a.type==='in'?'login':'logout'}"></i>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:var(--text)">${a.type==='in'?'Nhận xe':'Trả xe'} — <span style="font-family:var(--mono)">${a.session.plate}</span></div>
+        <div style="font-size:11px;color:var(--text3)">${TYPE_LABELS[a.session.type]} · ${a.session.id}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        ${a.fee ? `<div style="font-family:var(--mono);font-size:12px;color:var(--green)">${fmt(a.fee)}</div>` : ''}
+        <div style="font-size:11px;color:var(--text3)">${fmtTime(a.time)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ==================== NOTIFICATIONS ====================
+
+function renderNotifications() {
+  const el = document.getElementById('notifList');
+  if (!notifications.length) {
+    el.innerHTML = `<div class="empty-state"><i class="ti ti-bell-off"></i><p>Không có thông báo nào</p></div>`;
+    return;
+  }
+  el.innerHTML = notifications.map((n, i) => `
+    <div class="notif-item" style="${n.read ? 'opacity:0.5' : ''}">
+      <div class="notif-icon ${n.type}"><i class="ti ${n.icon}"></i></div>
+      <div class="notif-body" style="flex:1">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-msg">${n.msg}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+      ${!n.read ? `<button class="btn btn-ghost btn-sm" onclick="markRead(${i})"><i class="ti ti-check"></i></button>` : ''}
+    </div>
+  `).join('');
+  document.getElementById('notifBadge').textContent = notifications.filter(n => !n.read).length || '';
+}
+
+function markRead(i) { notifications[i].read = true; renderNotifications(); }
+function clearNotifs() { notifications.forEach(n => n.read = true); renderNotifications(); }
+
+// ==================== REPORT ====================
+
+function renderReport() {
+  const now = new Date();
+  const duration = fmtDuration(now - shiftStart);
+
+  const byType = {};
+  completed.forEach(s => {
+    byType[s.type] = byType[s.type] || { count: 0, revenue: 0 };
+    byType[s.type].count++;
+    byType[s.type].revenue += s.fee || 0;
+  });
+
+  document.getElementById('reportData').innerHTML = `
+    <div class="ticket-row"><span class="key">Ca làm việc</span><span class="val">CA SÁNG 06:00–14:00</span></div>
+    <div class="ticket-row"><span class="key">Nhân viên</span><span class="val">Nguyễn Văn A</span></div>
+    <div class="ticket-row"><span class="key">Thời gian ca</span><span class="val">${fmtDateTime(shiftStart)} → Hiện tại</span></div>
+    <div class="ticket-row"><span class="key">Tổng xe nhận</span><span class="val">${sessions.length + completed.length} lượt</span></div>
+    <div class="ticket-row"><span class="key">Xe đã trả</span><span class="val">${completed.length} lượt</span></div>
+    <div class="ticket-row"><span class="key">Đang gửi</span><span class="val">${sessions.length} xe</span></div>
+    <div class="fee-row total" style="margin-top:8px"><span>Doanh thu ca</span><span class="fee-val">${fmt(shiftRevenue)}</span></div>
+  `;
+
+  const typeRows = Object.entries(byType).map(([type, d]) =>
+    `<div class="ticket-row"><span class="key">${TYPE_LABELS[type]||type}</span><span class="val">${d.count} xe · ${fmt(d.revenue)}</span></div>`
+  ).join('');
+
+  document.getElementById('reportByType').innerHTML = typeRows || `<div class="empty-state" style="padding:20px"><i class="ti ti-chart-off"></i><p>Chưa có xe nào trả</p></div>`;
+}
+
+function submitReport() {
+  const note = document.getElementById('handoverNote').value.trim();
+  showToast('Đã gửi báo cáo bàn giao ca thành công!', 'success');
+  document.getElementById('handoverNote').value = '';
+}
+
+// ==================== MODAL ====================
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+
+// ==================== TOAST ====================
+
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<i class="ti ti-${type === 'success' ? 'circle-check' : 'alert-circle'}"></i> ${msg}`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+// ==================== INIT ====================
+
+checkCapacity();
+updateTicketPreview();
+seedData();
+renderNotifications();
+
+// Auto-refresh sessions table every 30s
+setInterval(() => {
+  if (!document.getElementById('panel-sessions').classList.contains('panel-hidden')) {
+    renderSessionsTable();
+  }
+  updateStats();
+}, 30000);
+</script>
+</body>
+</html>
