@@ -8,10 +8,7 @@ import { motion } from 'motion/react';
 import { 
   BarChart3, LayoutDashboard, Car, LogOut, Clock, Layers, Users, Search, Plus, AlertCircle, ArrowRightCircle
 } from 'lucide-react';
-<<<<<<< HEAD
-import { fetchParkingUsers, ParkingUser } from '../services/userService';
-=======
->>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
+
 
 interface DashboardViewProps {
   userSession: {
@@ -36,12 +33,7 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
   const [occupiedSpots, setOccupiedSpots] = useState(87);
   const [searchQuery, setSearchQuery] = useState('');
   const [logs, setLogs] = useState<ParkingLog[]>([]);
-<<<<<<< HEAD
-  const [users, setUsers] = useState<ParkingUser[]>([]);
-  const [usersError, setUsersError] = useState<string | null>(null);
-  const [usersLoading, setUsersLoading] = useState(false);
-=======
->>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
+
 
   const [inputPlate, setInputPlate] = useState('');
   const [inputVehicle, setInputVehicle] = useState<'xe-o-to' | 'xe-may' | 'xe-ban-tai' | 'xe-dien'>('xe-o-to');
@@ -69,36 +61,7 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
     }
   };
 
-<<<<<<< HEAD
-  const fetchUserList = async () => {
-    setUsersLoading(true);
-    setUsersError(null);
 
-    try {
-      const data = await fetchParkingUsers();
-      setUsers(data);
-    } catch (error) {
-      console.error('Error fetching parking user list:', error);
-      setUsersError(error instanceof Error ? error.message : 'Lỗi khi tải danh sách người dùng');
-    } finally {
-      setUsersLoading(false);
-    }
-  };
-
-  // Run on mount and establish a 4-second sync timer (polling)
-  useEffect(() => {
-    fetchParkingData();
-    fetchUserList();
-    const interval = setInterval(() => {
-      fetchParkingData();
-      fetchUserList();
-=======
-  // Run on mount and establish a 4-second sync timer (polling)
-  useEffect(() => {
-    fetchParkingData();
-    const interval = setInterval(() => {
-      fetchParkingData();
->>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
     }, 4000);
 
     return () => clearInterval(interval);
@@ -206,15 +169,6 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-xs flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-gray-500 block uppercase tracking-wider">Số chỗ đã đỗ</span>
-            <span className="text-3xl font-display font-black text-park-blue-600">{occupiedSpots}</span>
-          </div>
-          <div className="w-11 h-11 rounded-xl bg-park-blue-50 text-park-blue-600 flex items-center justify-center font-bold text-lg border border-park-blue-100">
-            🚗
-          </div>
-        </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-xs flex items-center justify-between">
           <div className="space-y-1">
@@ -379,63 +333,5 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
           </div>
         </div>
       </div>
-<<<<<<< HEAD
-
-      <div className="mt-8 bg-white rounded-2xl border border-gray-100 p-6 shadow-xs">
-        <div className="flex items-center justify-between mb-4 gap-4">
-          <div>
-            <h3 className="font-display font-extrabold text-gray-900 text-lg">Danh sách người dùng</h3>
-            <p className="text-xs text-gray-500">Kết nối với API người dùng từ backend và hiển thị danh sách</p>
-          </div>
-          <button
-            onClick={fetchUserList}
-            className="text-sm font-semibold px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition"
-          >
-            Tải lại
-          </button>
-        </div>
-
-        {usersLoading ? (
-          <div className="text-sm text-gray-500">Đang tải danh sách người dùng...</div>
-        ) : usersError ? (
-          <div className="text-sm text-rose-600">Lỗi: {usersError}</div>
-        ) : users.length === 0 ? (
-          <div className="text-sm text-gray-500">Chưa có dữ liệu người dùng.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm border-separate border-spacing-y-2">
-              <thead>
-                <tr className="text-xs uppercase text-gray-500">
-                  <th className="px-3 py-2">ID</th>
-                  <th className="px-3 py-2">Tên</th>
-                  <th className="px-3 py-2">Email</th>
-                  <th className="px-3 py-2">Điện thoại</th>
-                  <th className="px-3 py-2">Vai trò</th>
-                  <th className="px-3 py-2">Trạng thái</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.user_id} className="bg-slate-50 odd:bg-white rounded-xl border border-gray-100">
-                    <td className="px-3 py-2 text-xs text-gray-600 font-mono">{user.user_id}</td>
-                    <td className="px-3 py-2 text-sm text-gray-800 font-semibold">{user.full_name}</td>
-                    <td className="px-3 py-2 text-sm text-gray-700">{user.email}</td>
-                    <td className="px-3 py-2 text-sm text-gray-700">{user.phone}</td>
-                    <td className="px-3 py-2 text-sm text-gray-700 capitalize">{user.role}</td>
-                    <td className="px-3 py-2 text-sm">
-                      <span className={`inline-flex px-2 py-1 rounded-full text-[11px] font-semibold ${user.active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                        {user.active ? 'Hoạt động' : 'Không hoạt động'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-=======
->>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
     </motion.div>
   );
-}
