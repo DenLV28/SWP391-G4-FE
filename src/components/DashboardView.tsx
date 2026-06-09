@@ -39,7 +39,12 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
   const [inputVehicle, setInputVehicle] = useState<'xe-o-to' | 'xe-may' | 'xe-ban-tai' | 'xe-dien'>('xe-o-to');
 
   // Fetch stats and logs from node.js backend server
-
+  const fetchParkingData = async () => {
+    try {
+      const [statsRes, logsRes] = await Promise.all([
+        fetch('/api/parking/stats'),
+        fetch('/api/parking/logs')
+      ]);
 
       if (statsRes.ok) {
         const stats = await statsRes.json();
