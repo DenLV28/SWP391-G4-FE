@@ -21,10 +21,38 @@
       ]
     },
     "allowImportingTsExtensions": true,
-<<<<<<< HEAD
     "types": ["vite/client"],
-=======
->>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
     "noEmit": true
   }
 }
+
+// {
+//   "compilerOptions": {
+//     "target": "ES2022",
+//     "experimentalDecorators": true,
+//     "useDefineForClassFields": false,
+//     "module": "ESNext",
+//     "lib": [
+//       "ES2022",
+//       "DOM",
+//       "DOM.Iterable"
+//     ],
+//     "skipLibCheck": true,
+//     "moduleResolution": "bundler",
+//     "isolatedModules": true,
+//     "moduleDetection": "force",
+//     "allowJs": true,
+//     "jsx": "react-jsx",
+//     "paths": {
+//       "@/*": [
+//         "./*"
+//       ]
+//     },
+//     "allowImportingTsExtensions": true,
+// <<<<<<< HEAD
+//     "types": ["vite/client"],
+// =======
+// >>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
+//     "noEmit": true
+//   }
+// }
