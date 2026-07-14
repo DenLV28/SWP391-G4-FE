@@ -1,0 +1,8 @@
+# PaddlePaddle CPU runtime — the inference engine PaddleOCR runs on.
+paddlepaddle==3.0.0
+# HTTP layer
+fastapi>=0.110
+uvicorn[standard]>=0.29
+# Image decode (paddleocr also pulls opencv; headless avoids GUI deps on servers)
+opencv-python-headless>=4.9
+numpy

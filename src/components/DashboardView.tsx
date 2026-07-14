@@ -8,7 +8,7 @@ import { motion } from 'motion/react';
 import { 
   BarChart3, LayoutDashboard, Car, LogOut, Clock, Layers, Users, Search, Plus, AlertCircle, ArrowRightCircle
 } from 'lucide-react';
-
+import { fetchParkingUsers, ParkingUser } from '../services/userService';
 
 interface DashboardViewProps {
   userSession: {
@@ -33,7 +33,9 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
   const [occupiedSpots, setOccupiedSpots] = useState(87);
   const [searchQuery, setSearchQuery] = useState('');
   const [logs, setLogs] = useState<ParkingLog[]>([]);
-
+  const [users, setUsers] = useState<ParkingUser[]>([]);
+  const [usersError, setUsersError] = useState<string | null>(null);
+  const [usersLoading, setUsersLoading] = useState(false);
 
   const [inputPlate, setInputPlate] = useState('');
   const [inputVehicle, setInputVehicle] = useState<'xe-o-to' | 'xe-may' | 'xe-ban-tai' | 'xe-dien'>('xe-o-to');
@@ -61,7 +63,28 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
     }
   };
 
+  const fetchUserList = async () => {
+    setUsersLoading(true);
+    setUsersError(null);
 
+    try {
+      const data = await fetchParkingUsers();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching parking user list:', error);
+      setUsersError(error instanceof Error ? error.message : 'Lỗi khi tải danh sách người dùng');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  // Run on mount and establish a 4-second sync timer (polling)
+  useEffect(() => {
+    fetchParkingData();
+    fetchUserList();
+    const interval = setInterval(() => {
+      fetchParkingData();
+      fetchUserList();
     }, 4000);
 
     return () => clearInterval(interval);
@@ -342,10 +365,12 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
           </div>
         </div>
       </div>
-<<<<<<< HEAD
-
-      <div className="mt-8 bg-white rounded-2xl border border-gray-10ssName="text-xs text-gray-500">Kết nối với API người dùng từ backend và hiển thị danh sách</p>
-      </div>
+      <div className="mt-8 bg-white rounded-2xl border border-gray-100 p-6 shadow-xs">
+        <div className="flex items-center justify-between mb-4 gap-4">
+          <div>
+            <h3 className="font-display font-extrabold text-gray-900 text-lg">Danh sách người dùng</h3>
+            <p className="text-xs text-gray-500">Kết nối với API người dùng từ backend và hiển thị danh sách</p>
+          </div>
           <button
             onClick={fetchUserList}
             className="text-sm font-semibold px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition"
@@ -383,8 +408,16 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
                     <td className="px-3 py-2 text-sm text-gray-700 capitalize">{user.role}</td>
                     <td className="px-3 py-2 text-sm">
                       <span className={`inline-flex px-2 py-1 rounded-full text-[11px] font-semibold ${user.active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                     
-=======
->>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
+                        {user.active ? 'Hoạt động' : 'Không hoạt động'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </motion.div>
   );
+}

@@ -1,3 +1,105 @@
+import { buildApiUrl as buildUrl } from './apiConfig';
+
+export interface UserRecord {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  role: string;
+  status: string;
+  isActive: boolean;
+  assignedParkingLot?: string;
+  createdAt: string | null;
+  passwordUpdatedAt?: string | null;
+}
+
+class UserService {
+  async fetchUsers(): Promise<UserRecord[]> {
+    const response = await fetch(buildUrl('/api/users'));
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || 'Không thể tải danh sách người dùng');
+    }
+    return response.json();
+  }
+
+  async createUser(payload: {
+    fullName: string;
+    email: string;
+    phone: string;
+    role: string;
+    status: string;
+    password?: string;
+    assignedParkingLot?: string;
+  }): Promise<UserRecord> {
+    const response = await fetch(buildUrl('/api/users'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Không thể tạo người dùng');
+    }
+    return data.user;
+  }
+
+  async updateUser(id: string, payload: {
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    role?: string;
+    status?: string;
+    assignedParkingLot?: string;
+  }): Promise<UserRecord> {
+    const response = await fetch(buildUrl(`/api/users/${id}`), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Không thể cập nhật người dùng');
+    }
+    return data.user;
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    const response = await fetch(buildUrl(`/api/users/${id}`), {
+      method: 'DELETE',
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || 'Không thể xóa người dùng');
+    }
+  }
+
+  /** Verifies currentPassword server-side (bcrypt) before setting newPassword. */
+  async changePassword(id: string, currentPassword: string, newPassword: string): Promise<UserRecord> {
+    const response = await fetch(buildUrl(`/api/users/${id}/password`), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || 'Không thể đổi mật khẩu');
+    }
+    return data.user;
+  }
+}
+
+const userService = new UserService();
+export default userService;
+
+// ---------------------------------------------------------------------------
+// Backward-compatibility shim for the legacy components/DashboardView.tsx
+// (kept so the project type-checks; maps the new UserRecord shape to the old).
+// ---------------------------------------------------------------------------
 export interface ParkingUser {
   user_id: string;
   full_name: string;
@@ -7,16 +109,14 @@ export interface ParkingUser {
   active: boolean;
 }
 
-const API_BASE = import.meta.env.VITE_PARKING_API_URL || 'http://localhost:8084/Parking/api';
-const DEFAULT_GIDZL = import.meta.env.VITE_PARKING_API_GIDZL || 'ZXI1G1X4JyBa9E0HQ3IIqaGq4P4eHCjI2HnmQWqBZUHST64xLHh0k6aCP5uj7vI8VJVA0Vsz1mkEGW';
-
-export async function fetchParkingUsers(gidzl: string = DEFAULT_GIDZL): Promise<ParkingUser[]> {
-  const url = `${API_BASE}/users?gidzl=${encodeURIComponent(gidzl)}`;
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Lỗi khi truy xuất API người dùng: ${response.status} ${response.statusText}`);
-  }
-
-  return response.json();
+export async function fetchParkingUsers(): Promise<ParkingUser[]> {
+  const records = await userService.fetchUsers();
+  return records.map((r) => ({
+    user_id: r.id,
+    full_name: r.fullName,
+    email: r.email,
+    phone: r.phone,
+    role: r.role,
+    active: r.isActive,
+  }));
 }

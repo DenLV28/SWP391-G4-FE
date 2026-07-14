@@ -17,11 +17,9 @@ interface RegisterViewProps {
 }
 
 const VEHICLE_OPTIONS: VehicleOption[] = [
-  { value: 'xe-may', label: 'Xe máy', icon: '🏍️' },
-  { value: 'xe-o-to', label: 'Xe ô tô (4-7 chỗ)', icon: '🚗' },
-  { value: 'xe-ban-tai', label: 'Xe bán tải / Xe SUV lớn', icon: '🚙' },
-  { value: 'xe-dien', label: 'Xe điện (EV)', icon: '⚡' },
-  { value: 'xe-tai', label: 'Xe tải / Khác', icon: '🚚' }
+  { value: 'motorbike',       label: 'Xe máy / Xe máy điện',    icon: '🏍️' },
+  { value: 'car',             label: 'Ô tô 4-7 chỗ (Xăng)',     icon: '🚗' },
+  { value: 'electric vehicle', label: 'Ô tô 4-7 chỗ (Điện / EV)', icon: '⚡' },
 ];
 
 export default function RegisterView({ onSuccess, onNavigateToLogin, onShowModal }: RegisterViewProps) {

@@ -23,6 +23,7 @@ export interface LoginForm {
 }
 
 export interface FormErrors {
+  general?: string;
   fullName?: string;
   email?: string;
   phone?: string;
