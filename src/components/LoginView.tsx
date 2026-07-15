@@ -9,7 +9,10 @@ import {
   Key, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Mail, Phone, Users, ShieldAlert, Sparkles
 } from 'lucide-react';
 import { LoginForm, FormErrors } from '../types';
+<<<<<<< HEAD
 import authService from '../services/authService';
+=======
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
 
 interface LoginViewProps {
   onSuccess: (data: LoginForm) => void;
@@ -57,11 +60,16 @@ export default function LoginView({ onSuccess, onNavigateToRegister, onShowModal
     return Object.keys(tempErrors).length === 0;
   };
 
+<<<<<<< HEAD
   const handleSubmit = async (e: React.FormEvent) => {
+=======
+  const handleSubmit = (e: React.FormEvent) => {
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
     e.preventDefault();
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+<<<<<<< HEAD
     
     try {
       // Call API to authenticate user from database
@@ -97,6 +105,12 @@ export default function LoginView({ onSuccess, onNavigateToRegister, onShowModal
     } finally {
       setIsSubmitting(false);
     }
+=======
+    setTimeout(() => {
+      setIsSubmitting(false);
+      onSuccess(form);
+    }, 1200);
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
   };
 
   const handleForgotPassword = (e: React.MouseEvent) => {
@@ -196,6 +210,7 @@ export default function LoginView({ onSuccess, onNavigateToRegister, onShowModal
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
+<<<<<<< HEAD
           {/* General error message */}
           {errors.general && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-3">
@@ -210,6 +225,8 @@ export default function LoginView({ onSuccess, onNavigateToRegister, onShowModal
             </div>
           )}
           
+=======
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
           {/* Identifier Input */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-700 block">Số điện thoại hoặc Biển số xe</label>

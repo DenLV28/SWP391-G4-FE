@@ -21,6 +21,7 @@ body {
   background-color: #f3f6fc;
 }
 
+<<<<<<< HEAD
 .public-page {
   background: #f4f7fd;
 }
@@ -448,6 +449,8 @@ html {
   scrollbar-gutter: stable;
 }
 
+=======
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
 /* Base fade-in animations */
 @keyframes fadeIn {
   from {
@@ -461,6 +464,7 @@ html {
 }
 
 .animate-fade-in {
+<<<<<<< HEAD
   animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -492,3 +496,12 @@ html {
 .zoom-in-95 {
   animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+=======
+<<<<<<< HEAD
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forward;
+=======
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+>>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
+}
+
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3

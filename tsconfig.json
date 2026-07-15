@@ -21,7 +21,14 @@
       ]
     },
     "allowImportingTsExtensions": true,
+<<<<<<< HEAD
     "types": ["vite/client"],
+=======
+<<<<<<< HEAD
+    "types": ["vite/client"],
+=======
+>>>>>>> abef81542bdc626f285b1c265be659ff0f535e2a
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
     "noEmit": true
   }
 }

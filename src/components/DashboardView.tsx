@@ -8,7 +8,11 @@ import { motion } from 'motion/react';
 import { 
   BarChart3, LayoutDashboard, Car, LogOut, Clock, Layers, Users, Search, Plus, AlertCircle, ArrowRightCircle
 } from 'lucide-react';
+<<<<<<< HEAD
 import { fetchParkingUsers, ParkingUser } from '../services/userService';
+=======
+
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
 
 interface DashboardViewProps {
   userSession: {
@@ -33,9 +37,13 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
   const [occupiedSpots, setOccupiedSpots] = useState(87);
   const [searchQuery, setSearchQuery] = useState('');
   const [logs, setLogs] = useState<ParkingLog[]>([]);
+<<<<<<< HEAD
   const [users, setUsers] = useState<ParkingUser[]>([]);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [usersLoading, setUsersLoading] = useState(false);
+=======
+
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
 
   const [inputPlate, setInputPlate] = useState('');
   const [inputVehicle, setInputVehicle] = useState<'xe-o-to' | 'xe-may' | 'xe-ban-tai' | 'xe-dien'>('xe-o-to');
@@ -63,6 +71,7 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
     }
   };
 
+<<<<<<< HEAD
   const fetchUserList = async () => {
     setUsersLoading(true);
     setUsersError(null);
@@ -85,6 +94,9 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
     const interval = setInterval(() => {
       fetchParkingData();
       fetchUserList();
+=======
+
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
     }, 4000);
 
     return () => clearInterval(interval);
@@ -192,6 +204,7 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
           </div>
         </div>
 
+<<<<<<< HEAD
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-xs flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-xs font-semibold text-gray-500 block uppercase tracking-wider">Số chỗ đã đỗ</span>
@@ -201,6 +214,8 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
             🚗
           </div>
         </div>
+=======
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
 
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-xs flex items-center justify-between">
           <div className="space-y-1">
@@ -365,6 +380,7 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
           </div>
         </div>
       </div>
+<<<<<<< HEAD
       <div className="mt-8 bg-white rounded-2xl border border-gray-100 p-6 shadow-xs">
         <div className="flex items-center justify-between mb-4 gap-4">
           <div>
@@ -421,3 +437,7 @@ export default function DashboardView({ userSession, onLogOut }: DashboardViewPr
     </motion.div>
   );
 }
+=======
+    </motion.div>
+  );
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3

@@ -23,7 +23,10 @@ export interface LoginForm {
 }
 
 export interface FormErrors {
+<<<<<<< HEAD
   general?: string;
+=======
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
   fullName?: string;
   email?: string;
   phone?: string;
