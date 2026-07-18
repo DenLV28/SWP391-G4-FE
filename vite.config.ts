@@ -19,7 +19,14 @@ export default defineConfig(() => {
       // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      // Also exclude non-source directories that cause spurious hot-reloads.
+      watch: process.env.DISABLE_HMR === 'true' ? null : {
+        ignored: [
+          '**/ocr-service/**',
+          '**/backend/node_modules/**',
+          '**/.git/**',
+        ],
+      },
       proxy: {
         '/api': {
           target: process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:4000',

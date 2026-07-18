@@ -101,6 +101,8 @@ export type Slot = {
   slotCode: string;
   vehicleType: VehicleKey;
   status: 'Available' | 'Occupied' | 'Reserved' | 'Pending' | 'Maintenance' | 'Locked';
+  /** Bãi đỗ sở hữu ô này (mỗi bãi có kho ô riêng); rỗng = bãi gốc Quận 9. */
+  parkingLot?: string;
   nearestGate?: string;
 };
 

@@ -65,6 +65,35 @@ export type RfidTapEvent = {
   ts: number;
 };
 
+/** Fetch the most recent entry scan for a card — used on exit to retrieve
+ * the license plate captured when the vehicle entered, for staff comparison. */
+export async function getLastEntryScan(rfidUid: string): Promise<RfidScan | null> {
+  try {
+    const res = await fetch(
+      buildApiUrl(`/api/rfid-scans?rfidUid=${encodeURIComponent(rfidUid)}&direction=entry&limit=1`),
+      { headers: defaultHeaders() },
+    );
+    if (!res.ok) return null;
+    const list = (await res.json()) as RfidScan[];
+    return list[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Push an open/close command to the backend queue; ESP32 polls and consumes it. */
+export async function sendGateCommand(gateId: string, command: 'open' | 'close'): Promise<void> {
+  try {
+    await fetch(buildApiUrl('/api/iot/gate-command'), {
+      method: 'POST',
+      headers: defaultHeaders(),
+      body: JSON.stringify({ gateId, command }),
+    });
+  } catch {
+    // Best-effort — ESP32 may not be online
+  }
+}
+
 /**
  * Live stream of RFID taps relayed by the backend (POST /api/iot/rfid-tap →
  * SSE /api/iot/rfid-events). The Gate Control screen subscribes and runs the

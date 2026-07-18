@@ -22,7 +22,6 @@ import ParkingLotsList from "./pages/public/ParkingLotsList";
 
 // Driver pages
 import MyParking from "./pages/driver/MyParking";
-import CurrentSessionPage from "./pages/driver/CurrentSession";
 import MyReservations from "./pages/driver/MyReservations";
 import PaymentsPage from "./pages/driver/Payments";
 import VNPayReturn from "./pages/driver/VNPayReturn";
@@ -290,10 +289,10 @@ export default function App() {
       const validViews = [
         "home", "baixe", "info", "slots", "pricing", "pricing-detail", "contact", "login", "register",
         "terms", "privacy", "help",
-        "myparking", "session", "reservations", "payments", "feedback", "profile", "vnpay-return",
+        "myparking", "reservations", "payments", "feedback", "profile", "vnpay-return",
         "admindashboard", "usermanagement", "rolemanagement", "systemconfig",
         "managerdashboard", "parkinglots", "parkinglotdetail", "pricing-vehicles", "reports", "exceptions", "issues",
-        "staffdashboard", "gatecontrol", "activitylog", "emergency",
+        "staffdashboard", "gatecontrol", "parkingmonitor", "activitylog", "emergency",
       ];
 
       const targetView = (hash || "home").split("?")[0];
@@ -306,10 +305,10 @@ export default function App() {
 
       if (!currentUser) {
         const isProtectedRoute = [
-          "myparking", "session", "reservations", "payments", "feedback", "profile",
+          "myparking", "reservations", "payments", "feedback", "profile",
           "admindashboard", "usermanagement", "rolemanagement", "systemconfig",
           "managerdashboard", "parkinglots", "parkinglotdetail", "pricing-vehicles", "reports", "exceptions", "issues",
-          "staffdashboard", "gatecontrol", "activitylog", "emergency",
+          "staffdashboard", "gatecontrol", "parkingmonitor", "activitylog", "emergency",
         ].includes(targetView);
 
         if (isProtectedRoute) {
@@ -2245,8 +2244,6 @@ export default function App() {
     switch (view) {
       case "myparking":
         return "Trang của tôi";
-      case "session":
-        return "Lượt gửi hiện tại";
       case "reservations":
         return "Đặt chỗ của tôi";
       case "payments":
@@ -2455,6 +2452,7 @@ export default function App() {
             feedbacks={feedbacksWithNames}
             users={users}
             onUpdateUser={handleUpdateProfile}
+            onCheckOutSession={handleCheckOutSession}
             onForceClearSlot={handleForceClearSlot}
             onSetSlotStatus={handleSetSlotStatus}
             onConfirmReservation={(id) => {
@@ -2559,7 +2557,6 @@ export default function App() {
               {/* Driver-Specific Pages with a standard profile layout */}
               {[
                 "myparking",
-                "session",
                 "reservations",
                 "payments",
                 "feedback",
@@ -2590,7 +2587,6 @@ export default function App() {
                       <nav className="space-y-1">
                         {[
                           { key: "myparking", label: "Trang của tôi" },
-                          { key: "session", label: "Lượt gửi hiện tại" },
                           { key: "reservations", label: "Đặt chỗ của tôi" },
                           { key: "payments", label: "Thanh toán" },
                           { key: "feedback", label: "Phản hồi / Hỗ trợ" },
@@ -2622,7 +2618,6 @@ export default function App() {
                       <p className="mb-2 px-1 text-[9px] font-bold uppercase tracking-widest text-slate-400">Lối tắt nhanh</p>
                       <div className="space-y-1">
                         {[
-                          { key: "session", label: "Lượt gửi hiện tại" },
                           { key: "slots",   label: "Đặt chỗ gửi xe" },
                         ].map((item) => (
                           <button
@@ -2694,28 +2689,6 @@ export default function App() {
                           addHiddenResIds(ids);
                           setReservations((prev) => prev.filter((r) => !ids.includes(r.id)));
                           ids.forEach((id) => apiUpdateReservation(id, { status: 'Completed' }).catch(() => {}));
-                        }}
-                      />
-                    )}
-                    {currentView === "session" && (
-                      <CurrentSessionPage
-                        currentSession={currentSession}
-                        setView={setView}
-                        onCheckOutSession={handleCheckOutSession}
-                        pricingRules={pricingRules}
-                        currentUser={currentUser}
-                        slots={slots}
-                        payments={payments}
-                        reservations={reservations.filter((r) => r.userId === currentUser.id)}
-                        savedVehicles={savedVehicles}
-                        onDismissSession={() => {
-                          setCurrentSession((prev) => ({
-                            ...prev,
-                            ticketCode: '',
-                            sessionStatus: 'Cancelled',
-                            paymentStatus: 'Unpaid',
-                            barrierStatus: 'Closed',
-                          }));
                         }}
                       />
                     )}

@@ -7,6 +7,7 @@ import ParkingFloorMap, { MapSlot } from '../../components/ParkingFloorMap';
 import { createVNPayPayment } from '../../services/vnpayService';
 import { createPayment } from '../../services/paymentService';
 import { PER_VISIT_OVERSTAY_HOURS, PER_VISIT_OVERSTAY_RATE } from '../../utils/reservationPricing';
+import { PARKING_LOTS, lotKeyOrDefault } from '../../utils/parkingLots';
 
 interface Props {
   setView: (view: string) => void;
@@ -56,11 +57,8 @@ const PRICING_ROW_META: Record<VehicleKey, { sub: string; unit: string }> = {
   'electric vehicle': { sub: 'EV + trạm sạc kèm theo', unit: '/giờ' },
 };
 
-const LOT_OPTIONS = [
-  'ParkFlow Quận 9 - Lò Lu',
-  'ParkFlow Thủ Đức - Linh Xuân',
-  'ParkFlow Long Phước',
-];
+// Danh sách bãi lấy từ nguồn chung — nhãn giữ nguyên như dữ liệu đặt chỗ cũ.
+const LOT_OPTIONS = PARKING_LOTS.map((l) => l.bookingLabel);
 
 // Legend items
 
@@ -137,20 +135,31 @@ export default function AvailableSlots({
     setLicensePlate(v.licensePlate);
   };
 
+  // Mỗi bãi có kho ô đỗ riêng — sơ đồ và việc gán ô chỉ nhìn ô của bãi đã chọn.
+  const lotSlots = useMemo(
+    () => slots.filter((s) => lotKeyOrDefault(s.parkingLot) === lotKeyOrDefault(selectedLot)),
+    [slots, selectedLot],
+  );
+
+  // Đổi bãi thì ô đã chọn (thuộc bãi cũ) không còn hợp lệ.
+  useEffect(() => {
+    setSelectedSlotId(null);
+  }, [selectedLot]);
+
   const matchedSlot = useMemo(() => {
     // Only look up a real slot — skip virtual map spaces (no backing data)
     if (selectedSlotId && !selectedSlotId.startsWith('virtual-')) {
-      const found = slots.find((s) => s.id === selectedSlotId);
+      const found = lotSlots.find((s) => s.id === selectedSlotId);
       if (found) return found;
     }
     // Auto-assign: prefer matching vehicle type, then fallback
     const order: VehicleKey[] = [vehicleType, 'car', 'motorbike', 'electric vehicle'];
     for (const type of order) {
-      const slot = slots.find((s) => s.status === 'Available' && s.vehicleType === type);
+      const slot = lotSlots.find((s) => s.status === 'Available' && s.vehicleType === type);
       if (slot) return slot;
     }
-    return slots.find((s) => s.status === 'Available') ?? null;
-  }, [slots, vehicleType, selectedSlotId]);
+    return lotSlots.find((s) => s.status === 'Available') ?? null;
+  }, [lotSlots, vehicleType, selectedSlotId]);
 
   const reservationMeta = useMemo(() => {
     if (packageKey === 'overnight')
@@ -416,7 +425,7 @@ export default function AvailableSlots({
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-2 overflow-hidden">
                     <ParkingFloorMap
-                      slots={slots.map((s) => ({ id: s.id, code: s.slotCode.split('-').pop() ?? s.slotCode, status: s.status } as MapSlot))}
+                      slots={lotSlots.map((s) => ({ id: s.id, code: s.slotCode.split('-').pop() ?? s.slotCode, status: s.status } as MapSlot))}
                       selectedId={selectedSlotId}
                       onSelect={(id) => setSelectedSlotId((prev) => (prev === id ? null : id))}
                       interactive={true}

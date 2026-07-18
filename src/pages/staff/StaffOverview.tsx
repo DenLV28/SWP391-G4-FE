@@ -21,6 +21,11 @@ interface StaffOverviewProps {
   onSubmitEmergency?: (type: IncidentType, description: string, slotCode?: string, floor?: string) => void;
   addToast?: (message: string, type?: 'success' | 'info' | 'error') => void;
   onSetSlotStatus?: (slotCode: string, status: Slot['status']) => Promise<boolean>;
+  // Dữ liệu toàn hệ thống (không lọc theo bãi) + bãi phụ trách — cho bộ chọn
+  // bãi trong panel sơ đồ, để staff xem tình trạng bãi bất kỳ khi cần.
+  allSlots?: Slot[];
+  allReservations?: Reservation[];
+  assignedLot?: string;
 }
 
 const vehicleLabel: Record<string, string> = {
@@ -53,6 +58,9 @@ export default function StaffOverview({
   onSubmitEmergency,
   addToast,
   onSetSlotStatus,
+  allSlots,
+  allReservations,
+  assignedLot,
 }: StaffOverviewProps) {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
@@ -126,7 +134,9 @@ export default function StaffOverview({
         <EmergencyPanel
           emergencyLogs={emergencyLogs}
           onSubmit={onSubmitEmergency}
-          slots={slots}
+          slots={allSlots ?? slots}
+          reservations={allReservations ?? reservations}
+          defaultLot={assignedLot}
           addToast={addToast}
           onSetSlotStatus={onSetSlotStatus}
         />

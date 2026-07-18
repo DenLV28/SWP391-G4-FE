@@ -52,9 +52,11 @@ export default function VNPayReturn({ onPaymentSuccess, setView }: VNPayReturnPr
     setView('payments');
   };
 
+  // Trang "Lượt gửi hiện tại" của user đã chuyển thành "Theo dõi bãi xe" phía
+  // staff — sau thanh toán, đưa khách về lịch sử thanh toán.
   const goToSession = () => {
-    window.location.hash = '#/session';
-    setView('session');
+    window.location.hash = '#/payments';
+    setView('payments');
   };
 
   return (
@@ -122,7 +124,7 @@ export default function VNPayReturn({ onPaymentSuccess, setView }: VNPayReturnPr
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-bold text-white transition hover:bg-blue-500"
           >
             <ParkingSquare className="h-4 w-4" />
-            Chuyển đến trang lượt gửi hiện tại
+            Xem lịch sử thanh toán
           </button>
         ) : (
           <button

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { BarChart3, AlertCircle, Bell, LayoutDashboard, DollarSign, LogOut, UserCircle2, Building2, MessageCircle, Plus, TrendingUp, Calendar, Car, Bike, Zap, LayoutGrid, List, ChevronDown, Wrench, X } from 'lucide-react';
 import { User, Slot, Reservation, Payment, PricingRule, Floor, Area, Feedback, SlotIssue } from '../../data/mockData';
 import type { EmergencyLog } from '../../types/staff';
@@ -7,6 +7,7 @@ import PaymentWalletCard from '../../components/PaymentWalletCard';
 import StaffManagerChat from '../../components/StaffManagerChat';
 import RoleProfilePage from '../../components/RoleProfilePage';
 import { formatCurrency } from '../../utils/helpers';
+import { PARKING_LOTS, lotKeyOrDefault, type LotKey } from '../../utils/parkingLots';
 import ManagerParkingLots from './ManagerParkingLots';
 import ManagerParkingLotDetail from './ManagerParkingLotDetail';
 import ManagerPricingVehicles from './ManagerPricingVehicles';
@@ -38,9 +39,9 @@ interface ManagerDashboardProps {
 }
 
 export default function ManagerDashboard({
-  slots,
+  slots: allSlots,
   payments,
-  reservations,
+  reservations: allReservations,
   users,
   pricingRules = [],
   feedbacks = [],
@@ -59,6 +60,19 @@ export default function ManagerDashboard({
   onUpdateUser,
   onAssignStaff,
 }: ManagerDashboardProps) {
+  // ── Bộ chọn bãi đỗ ──────────────────────────────────────────────────────────
+  // Manager có quyền toàn cục: mặc định xem gộp cả 3 bãi, hoặc chọn một bãi
+  // để xem dữ liệu (ô đỗ, đặt chỗ, thống kê) của riêng bãi đó.
+  const [lotFilter, setLotFilter] = useState<'all' | LotKey>('all');
+  const slots = useMemo(
+    () => (lotFilter === 'all' ? allSlots : allSlots.filter((s) => lotKeyOrDefault(s.parkingLot) === lotFilter)),
+    [allSlots, lotFilter],
+  );
+  const reservations = useMemo(
+    () => (lotFilter === 'all' ? allReservations : allReservations.filter((r) => lotKeyOrDefault(r.parkingLot) === lotFilter)),
+    [allReservations, lotFilter],
+  );
+
   const [bellOpen, setBellOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -128,7 +142,8 @@ export default function ManagerDashboard({
       case 'pricing-vehicles':
         return <ManagerPricingVehicles setView={setView} payments={payments} />;
       case 'reports':
-        return <ManagerReports payments={payments} />;
+        // Báo cáo có bộ lọc bãi + thời gian riêng — nhận dữ liệu toàn hệ thống
+        return <ManagerReports payments={payments} reservations={allReservations} />;
       case 'exceptions':
         return <ManagerExceptions setView={setView} emergencyLogs={emergencyLogs} />;
       case 'issues':
@@ -157,6 +172,8 @@ export default function ManagerDashboard({
             reservations={reservations}
             users={users}
             pricingRules={pricingRules}
+            allSlots={allSlots}
+            activeLotFilter={lotFilter}
           />
         );
     }
@@ -240,6 +257,21 @@ export default function ManagerDashboard({
               <input placeholder="Tìm kiếm ngoại lệ, biển số..." className="w-full rounded-xl bg-slate-100/70 py-2 pl-9 pr-3 text-sm focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-300" />
             </div>
             <div className="flex items-center gap-3">
+              {/* Parking-lot selector — switch which lot's data is shown */}
+              <div className="relative">
+                <select
+                  value={lotFilter}
+                  onChange={(e) => setLotFilter(e.target.value as 'all' | LotKey)}
+                  title="Chọn bãi đỗ để xem dữ liệu"
+                  className="appearance-none rounded-xl border border-slate-200 bg-slate-50 py-2 pl-3 pr-8 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-300"
+                >
+                  <option value="all">Tất cả bãi đỗ</option>
+                  {PARKING_LOTS.map((lot) => (
+                    <option key={lot.key} value={lot.key}>{lot.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              </div>
               {/* Notification Bell */}
               {(() => {
                 const newFeedbacks = feedbacks.filter((f) => f.status === 'New');
@@ -469,15 +501,34 @@ function DashboardContent({
   reservations: _reservations,
   users: _users,
   pricingRules,
+  allSlots,
+  activeLotFilter = 'all',
 }: {
   slots: Slot[];
   payments: Payment[];
   reservations: Reservation[];
   users: User[];
   pricingRules: PricingRule[];
+  /** Toàn bộ ô đỗ của cả 3 bãi — cho bộ chọn bãi riêng của sơ đồ. */
+  allSlots?: Slot[];
+  /** Bãi đang chọn trên topbar — sơ đồ đồng bộ theo khi chọn một bãi cụ thể. */
+  activeLotFilter?: 'all' | LotKey;
 }) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [areaMode, setAreaMode] = useState<'all' | 'car' | 'motorbike'>('all');
+
+  // ── Chọn bãi đỗ cho sơ đồ (giống form Đặt chỗ của user) ─────────────────────
+  // Sơ đồ luôn hiển thị MỘT bãi cụ thể (mỗi bãi có kho ô riêng trùng mã A01...,
+  // gộp chung sẽ chồng ô lên nhau). Chọn bãi ở đây → nhảy sang xem tình trạng
+  // bãi đó; chọn bãi trên topbar cũng tự đồng bộ xuống sơ đồ.
+  const [mapLot, setMapLot] = useState<LotKey>(activeLotFilter === 'all' ? 'quan9' : activeLotFilter);
+  useEffect(() => {
+    if (activeLotFilter !== 'all') setMapLot(activeLotFilter);
+  }, [activeLotFilter]);
+  const mapSlots = useMemo(
+    () => (allSlots ?? slots).filter((s) => lotKeyOrDefault(s.parkingLot) === mapLot),
+    [allSlots, slots, mapLot],
+  );
 
   const now = new Date();
   const dayNames = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
@@ -681,9 +732,25 @@ function DashboardContent({
             </div>
           </div>
         </div>
+        {/* Chọn bãi đỗ — giống list ở chức năng Đặt chỗ của user */}
+        <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-3">
+          <label className="mb-1.5 block text-xs font-bold text-slate-600">Chọn bãi đỗ</label>
+          <div className="relative max-w-sm">
+            <select
+              value={mapLot}
+              onChange={(e) => setMapLot(e.target.value as LotKey)}
+              className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm font-semibold text-slate-800 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10"
+            >
+              {PARKING_LOTS.map((lot) => (
+                <option key={lot.key} value={lot.key}>{lot.bookingLabel}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          </div>
+        </div>
         <div className="p-5">
           <ParkingFloorMap
-            slots={slots.map((s) => ({
+            slots={mapSlots.map((s) => ({
               id: s.id,
               code: s.slotCode.split('-').pop() ?? s.slotCode,
               status: s.status,

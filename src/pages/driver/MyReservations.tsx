@@ -462,7 +462,6 @@ export default function MyReservations({
           onCancel={() => handleCancelClick(detailReservation)}
           onCheckIn={() => handleSimulateCheckIn(detailReservation)}
           onExpire={() => onExpireReservation(detailReservation.id)}
-          onOpenSession={() => setView('session')}
         />
       )}
 
@@ -499,11 +498,11 @@ export default function MyReservations({
               <button
                 onClick={() => {
                   setCheckInSuccessData(null);
-                  setView('session');
+                  setView('myparking');
                 }}
                 className="w-1/2 cursor-pointer rounded-xl bg-blue-600 py-3 text-xs font-bold text-white transition hover:bg-blue-500"
               >
-                Xem lượt gửi
+                Về trang của tôi
               </button>
             </div>
           </div>
@@ -839,7 +838,6 @@ function ReservationDetailModal({
   onCancel,
   onCheckIn,
   onExpire,
-  onOpenSession,
 }: {
   reservation: Reservation;
   pricingRules?: PricingRule[];
@@ -847,7 +845,6 @@ function ReservationDetailModal({
   onCancel: () => void;
   onCheckIn: () => void;
   onExpire: () => void;
-  onOpenSession: () => void;
 }) {
   const statusMeta = getDisplayStatusMeta(reservation, pricingRules);
 
@@ -915,9 +912,6 @@ function ReservationDetailModal({
           )}
           {reservation.status === 'Pending' && (
             <ActionButton tone="rose" onClick={onCancel}>Hủy đặt chỗ</ActionButton>
-          )}
-          {reservation.status === 'Checked-in' && (
-            <ActionButton tone="blue" onClick={onOpenSession}>Xem lượt gửi hiện tại</ActionButton>
           )}
         </div>
 
