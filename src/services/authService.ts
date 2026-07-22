@@ -151,13 +151,13 @@ export const ROLE_POLICY: Record<Role, RolePolicy> = {
   'Parking Staff': {
     label: 'Parking Staff',
     home: 'staffdashboard',
-    routes: ['staffdashboard', 'gatecontrol', 'activitylog', 'emergency', 'profile'],
+    routes: ['staffdashboard', 'gatecontrol', 'parkingmonitor', 'activitylog', 'emergency', 'profile'],
     permissions: permissionsFor('Parking Staff'),
   },
   'Parking User / Driver': {
     label: 'Parking User / Driver',
     home: 'myparking',
-    routes: ['myparking', 'session', 'reservations', 'payments', 'feedback', 'profile', 'vnpay-return'],
+    routes: ['myparking', 'reservations', 'payments', 'feedback', 'profile', 'vnpay-return'],
     permissions: permissionsFor('Parking User / Driver'),
   },
 };

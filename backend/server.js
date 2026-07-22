@@ -317,6 +317,13 @@ async function createTables() {
       END
     END
   `);
+  // parking_lot — mỗi bãi có kho ô đỗ riêng; hàng cũ mặc định thuộc bãi Quận 9
+  await pool.request().query(`
+    IF COL_LENGTH('dbo.parking_slots', 'parking_lot') IS NULL
+    BEGIN
+      ALTER TABLE dbo.parking_slots ADD parking_lot NVARCHAR(100) NOT NULL DEFAULT N'ParkFlow Quận 9';
+    END
+  `);
 
   // slot_issues
   await pool.request().query(`
@@ -541,22 +548,66 @@ const INITIAL_SLOTS = [
   { slotCode: 'F1-E11', floor: 1, zone: 'B', vehicleType: 'Xe máy / Xe máy điện', status: 'Available' },
 ];
 
+// Mỗi bãi có kho ô đỗ độc lập, cùng mặt bằng nhưng SỨC CHỨA KHÁC NHAU — `rows`
+// khai báo số ô mỗi dãy (A/D: ô tô, B/E: xe máy, C: EV). Mã ô của 2 bãi mới
+// được gắn tiền tố (TD-/LP-) để giữ UNIQUE trên slot_code; sơ đồ chỉ hiển thị
+// nhãn cuối (A01, B02...).
+//   Quận 9 - Lò Lu:      36 vị trí (đủ mặt bằng)
+//   Thủ Đức - Linh Xuân: 30 vị trí (dãy E chỉ 5 ô)
+//   Long Phước:          24 vị trí (mỗi dãy đều ít hơn)
+const SLOT_LOTS = [
+  { prefix: '',    name: 'ParkFlow Quận 9',     rows: { A: 11, B: 5, C: 5, D: 4, E: 11 } },
+  { prefix: 'TD-', name: 'ParkFlow Thủ Đức',    rows: { A: 11, B: 5, C: 5, D: 4, E: 5  } },
+  { prefix: 'LP-', name: 'ParkFlow Long Phước', rows: { A: 8,  B: 4, C: 3, D: 2, E: 7  } },
+];
+
+/** Các ô của INITIAL_SLOTS thuộc layout một bãi ('F1-A01' → dãy A, số 1). */
+function slotsForLot(lot) {
+  return INITIAL_SLOTS.filter((s) => {
+    const row = s.slotCode.slice(3, 4);
+    const num = Number(s.slotCode.slice(4));
+    return num <= (lot.rows[row] ?? 0);
+  });
+}
+
 async function seedSlots() {
   // INSERT-IF-NOT-EXISTS for every slot so missing rows are added on each server start.
   // Existing rows keep their current status (not overwritten).
-  for (const s of INITIAL_SLOTS) {
-    await pool.request()
-      .input('slot_code',    sql.NVarChar, s.slotCode)
-      .input('floor',        sql.Int,      s.floor)
-      .input('zone',         sql.NVarChar, s.zone)
-      .input('vehicle_type', sql.NVarChar, s.vehicleType)
-      .input('status',       sql.NVarChar, s.status)
-      .query(`
-        IF NOT EXISTS (SELECT 1 FROM dbo.parking_slots WHERE slot_code = @slot_code)
-          INSERT INTO dbo.parking_slots (slot_code, floor, zone, vehicle_type, status)
-          VALUES (@slot_code, @floor, @zone, @vehicle_type, @status)
-      `);
+  for (const lot of SLOT_LOTS) {
+    const wanted = slotsForLot(lot);
+    for (const s of wanted) {
+      await pool.request()
+        .input('slot_code',    sql.NVarChar, `${lot.prefix}${s.slotCode}`)
+        .input('floor',        sql.Int,      s.floor)
+        .input('zone',         sql.NVarChar, s.zone)
+        .input('vehicle_type', sql.NVarChar, s.vehicleType)
+        // Bãi gốc giữ status demo; 2 bãi mới khởi tạo toàn ô trống
+        .input('status',       sql.NVarChar, lot.prefix ? 'Available' : s.status)
+        .input('parking_lot',  sql.NVarChar, lot.name)
+        .query(`
+          IF NOT EXISTS (SELECT 1 FROM dbo.parking_slots WHERE slot_code = @slot_code)
+            INSERT INTO dbo.parking_slots (slot_code, floor, zone, vehicle_type, status, parking_lot)
+            VALUES (@slot_code, @floor, @zone, @vehicle_type, @status, @parking_lot)
+        `);
+    }
+    // DB cũ từng seed đủ 36 ô cho mọi bãi — dọn các ô ngoài layout của 2 bãi
+    // mới để sức chứa thật sự khác nhau. Chỉ xóa ô còn 'Available' (không đụng
+    // ô đang có xe/đặt chỗ); bãi Quận 9 (prefix rỗng) giữ nguyên mọi hàng cũ.
+    if (lot.prefix) {
+      const keep = wanted.map((s) => `N'${lot.prefix}${s.slotCode}'`).join(',');
+      await pool.request()
+        .input('lot_name', sql.NVarChar, lot.name)
+        .query(`
+          DELETE FROM dbo.parking_slots
+          WHERE parking_lot = @lot_name AND status = 'Available'
+            AND slot_code NOT IN (${keep})
+        `);
+    }
   }
+  // Hàng cũ tạo trước khi có cột parking_lot → gán về bãi Quận 9
+  await pool.request().query(`
+    UPDATE dbo.parking_slots SET parking_lot = N'ParkFlow Quận 9' WHERE parking_lot = ''
+  `);
 }
 
 async function migrateSlotAndRoles() {
@@ -2094,7 +2145,9 @@ app.get('/api/iot/rfid-events', (req, res) => {
 
 // Called by the Arduino/ESP32 firmware — body: { "rfidUid": "04A2B1C3",
 // "gateId": "A1", "direction": "entry" } (gateId/direction optional).
-app.post('/api/iot/rfid-tap', (req, res) => {
+// Now async: looks up the UID in dbo.vehicles and returns openBarrier=true
+// if the card is registered so the ESP32 knows whether to open the servo.
+app.post('/api/iot/rfid-tap', async (req, res) => {
   const { rfidUid, gateId, direction } = req.body || {};
   const uid = String(rfidUid || '').trim().toUpperCase();
   if (!uid) return res.status(400).json({ error: 'Thiếu rfidUid.' });
@@ -2104,9 +2157,96 @@ app.post('/api/iot/rfid-tap', (req, res) => {
     direction: direction === 'exit' ? 'exit' : 'entry',
     ts: Date.now(),
   };
+
+  // Check if this UID is registered → tell ESP32 whether to open the barrier
+  let openBarrier = false;
+  let vehicleInfo = null;
+  try {
+    const r = await pool.request()
+      .input('uid', sql.NVarChar, uid)
+      .query(`
+        SELECT v.license_plate, v.vehicle_type, u.full_name
+        FROM dbo.vehicles v
+        LEFT JOIN dbo.users u ON TRY_CAST(v.user_id AS INT) = u.user_id
+        WHERE v.rfid_uid = @uid
+      `);
+    if (r.recordset.length > 0) {
+      openBarrier = true;
+      vehicleInfo = r.recordset[0];
+    }
+  } catch (err) {
+    console.error('IoT RFID lookup error:', err.message);
+  }
+
   broadcastRfidTap(evt);
-  console.log(`IoT RFID tap: ${evt.rfidUid} (gate=${evt.gateId || '?'} dir=${evt.direction}) → ${iotRfidSseClients.size} client(s)`);
-  return res.json({ ok: true, received: evt, listeners: iotRfidSseClients.size });
+  console.log(`IoT RFID tap: ${uid} → openBarrier=${openBarrier} (gate=${evt.gateId || '?'} dir=${evt.direction}) → ${iotRfidSseClients.size} client(s)`);
+  return res.json({
+    ok: true,
+    received: evt,
+    listeners: iotRfidSseClients.size,
+    openBarrier,
+    vehicle: vehicleInfo ? {
+      licensePlate: vehicleInfo.license_plate,
+      vehicleType: vehicleInfo.vehicle_type,
+      ownerName: vehicleInfo.full_name || '',
+    } : null,
+  });
+});
+
+// ─── IoT: Manual gate command queue (ESP32 polls, frontend pushes) ────────────
+// Staff bấm "Mở rào / Đóng rào" → POST đây → ESP32 poll GET và thực thi.
+const gateCommandQueue = new Map(); // gateId → 'open' | 'close'
+
+app.post('/api/iot/gate-command', (req, res) => {
+  const { gateId, command } = req.body || {};
+  const gid = String(gateId || '').trim();
+  if (!gid || !['open', 'close'].includes(command)) {
+    return res.status(400).json({ error: 'Cần gateId và command (open | close).' });
+  }
+  gateCommandQueue.set(gid, command);
+  console.log(`IoT gate command queued: gate=${gid} cmd=${command}`);
+  return res.json({ ok: true, gateId: gid, command });
+});
+
+// ESP32 gọi endpoint này mỗi ~1 giây; lệnh bị xóa ngay sau khi đọc.
+app.get('/api/iot/gate-command/:gateId', (req, res) => {
+  const gateId = String(req.params.gateId || '').trim();
+  const command = gateCommandQueue.get(gateId) || null;
+  if (command) gateCommandQueue.delete(gateId);
+  return res.json({ command });
+});
+
+// HTTP polling source for iotService.ts (VITE_IOT_HTTP_URL).
+// Returns recent RFID scan rows formatted as ScanEvent so the frontend
+// IoT status badge shows "online" and scans appear in the live list.
+app.get('/api/iot/scan-events', async (req, res) => {
+  try {
+    const sinceMs = Number(req.query.since) || 0;
+    // Default window: last 30 seconds on the very first poll
+    const sinceDate = new Date(sinceMs > 0 ? sinceMs : Date.now() - 30000);
+    const r = await pool.request()
+      .input('since', sql.DateTime2, sinceDate)
+      .query(`
+        SELECT TOP 50
+          scan_id, rfid_uid, gate_id, direction, license_plate, status, created_at
+        FROM dbo.rfid_scans
+        WHERE created_at > @since
+        ORDER BY created_at DESC
+      `);
+    const events = r.recordset.map((row) => ({
+      id:           `RFID-${row.scan_id}`,
+      gateId:       row.gate_id      || 'A1',
+      direction:    row.direction    || 'entry',
+      licensePlate: row.license_plate || '',
+      rfidUid:      row.rfid_uid,
+      recognition:  row.license_plate ? 'casual' : 'unknown',
+      timestamp:    new Date(row.created_at).toISOString(),
+    }));
+    return res.json(events);
+  } catch (err) {
+    console.error('GET /api/iot/scan-events', err);
+    return res.status(500).json([]);
+  }
 });
 
 /** Inserts a notification row for a user and pushes it out over SSE. */
@@ -2207,11 +2347,16 @@ app.get('/api/slots/events', (req, res) => {
   req.on('close', () => { clearInterval(heartbeat); sseClients.delete(res); });
 });
 
-app.get('/api/slots', async (_req, res) => {
+app.get('/api/slots', async (req, res) => {
   try {
-    const r = await pool.request().query(
-      `SELECT slot_code, floor, zone, vehicle_type, status FROM dbo.parking_slots ORDER BY slot_code`
-    );
+    // ?lot=ParkFlow Thủ Đức — lọc theo bãi (bỏ trống = tất cả các bãi)
+    const lotFilter = req.query.lot ? String(req.query.lot) : null;
+    const r = lotFilter
+      ? await pool.request().input('lot', sql.NVarChar, lotFilter).query(
+          `SELECT slot_code, floor, zone, vehicle_type, status, parking_lot
+           FROM dbo.parking_slots WHERE parking_lot = @lot ORDER BY slot_code`)
+      : await pool.request().query(
+          `SELECT slot_code, floor, zone, vehicle_type, status, parking_lot FROM dbo.parking_slots ORDER BY slot_code`);
     const vtMap = {
       'Xe máy / Xe máy điện':    'motorbike',
       'Ô tô 4-7 chỗ (Xăng)':    'car',
@@ -2228,6 +2373,7 @@ app.get('/api/slots', async (_req, res) => {
       areaName: `Khu ${s.zone} — ${s.vehicle_type}`,
       vehicleType: vtMap[s.vehicle_type] ?? 'car',
       status: s.status,
+      parkingLot: s.parking_lot || 'ParkFlow Quận 9',
       nearestGate: 'Cổng chính',
     })));
   } catch (err) {

@@ -22,7 +22,6 @@ import ParkingLotsList from "./pages/public/ParkingLotsList";
 
 // Driver pages
 import MyParking from "./pages/driver/MyParking";
-import CurrentSessionPage from "./pages/driver/CurrentSession";
 import MyReservations from "./pages/driver/MyReservations";
 import PaymentsPage from "./pages/driver/Payments";
 import VNPayReturn from "./pages/driver/VNPayReturn";
@@ -290,10 +289,10 @@ export default function App() {
       const validViews = [
         "home", "baixe", "info", "slots", "pricing", "pricing-detail", "contact", "login", "register",
         "terms", "privacy", "help",
-        "myparking", "session", "reservations", "payments", "feedback", "profile", "vnpay-return",
+        "myparking", "reservations", "payments", "feedback", "profile", "vnpay-return",
         "admindashboard", "usermanagement", "rolemanagement", "systemconfig",
         "managerdashboard", "parkinglots", "parkinglotdetail", "pricing-vehicles", "reports", "exceptions", "issues",
-        "staffdashboard", "gatecontrol", "activitylog", "emergency",
+        "staffdashboard", "gatecontrol", "parkingmonitor", "activitylog", "emergency",
       ];
 
       const targetView = (hash || "home").split("?")[0];
@@ -306,10 +305,10 @@ export default function App() {
 
       if (!currentUser) {
         const isProtectedRoute = [
-          "myparking", "session", "reservations", "payments", "feedback", "profile",
+          "myparking", "reservations", "payments", "feedback", "profile",
           "admindashboard", "usermanagement", "rolemanagement", "systemconfig",
           "managerdashboard", "parkinglots", "parkinglotdetail", "pricing-vehicles", "reports", "exceptions", "issues",
-          "staffdashboard", "gatecontrol", "activitylog", "emergency",
+          "staffdashboard", "gatecontrol", "parkingmonitor", "activitylog", "emergency",
         ].includes(targetView);
 
         if (isProtectedRoute) {
@@ -395,12 +394,26 @@ export default function App() {
     const sync = async () => {
       const dbSlots = await fetchSlotStatuses();
       if (!dbSlots.length) return;
-      setSlots((prev) =>
-        prev.map((s) => {
-          const db = dbSlots.find((d) => d.slotCode === s.slotCode);
-          return db && db.status !== s.status ? { ...s, status: db.status } : s;
-        }),
-      );
+      // DB là nguồn chân lý cho kho ô đỗ: cập nhật status + parkingLot cho ô đã
+      // có, BỔ SUNG ô chỉ tồn tại trong DB (TD-*/LP-* của Thủ Đức & Long Phước)
+      // và LOẠI ô đã bị xóa khỏi DB (mỗi bãi sức chứa khác nhau, localStorage
+      // cũ có thể còn ô ma) — nhờ vậy sơ đồ 3 bãi đồng bộ cho User/Staff/Manager.
+      setSlots((prev) => {
+        const known = new Set(prev.map((s) => s.slotCode));
+        const dbCodes = new Set(dbSlots.map((d) => d.slotCode));
+        const merged = prev
+          .filter((s) => dbCodes.has(s.slotCode))
+          .map((s) => {
+            const db = dbSlots.find((d) => d.slotCode === s.slotCode);
+            if (!db) return s;
+            const statusChanged = db.status !== s.status;
+            const lotChanged = !!db.parkingLot && db.parkingLot !== s.parkingLot;
+            if (!statusChanged && !lotChanged) return s;
+            return { ...s, status: db.status, parkingLot: db.parkingLot ?? s.parkingLot };
+          });
+        const additions = dbSlots.filter((d) => !known.has(d.slotCode));
+        return additions.length ? [...merged, ...additions] : merged;
+      });
     };
     // Pricing rides the same interval — Manager's edits show up for Staff/User
     // without a full reload, no need for a separate timer.
@@ -913,6 +926,7 @@ export default function App() {
                 phone: apiUser.phone,
                 role: apiUser.role,
                 status: apiUser.status,
+                assignedParkingLot: apiUser.assignedParkingLot,
               };
             } else {
               merged.push(apiUser);
@@ -939,11 +953,14 @@ export default function App() {
           }
 
           // Refresh display fields while preserving the local ID.
+          // assignedParkingLot: staff đang đăng nhập nhận phân công bãi mới của
+          // manager trong vòng 5s, không cần đăng nhập lại.
           if (
             latestUser.fullName !== currentUser.fullName ||
             latestUser.role !== currentUser.role ||
             latestUser.phone !== currentUser.phone ||
-            latestUser.status !== currentUser.status
+            latestUser.status !== currentUser.status ||
+            (latestUser.assignedParkingLot || '') !== (currentUser.assignedParkingLot || '')
           ) {
             const refreshedUser: User = {
               ...currentUser,
@@ -951,6 +968,7 @@ export default function App() {
               phone: latestUser.phone,
               role: latestUser.role,
               status: latestUser.status,
+              assignedParkingLot: latestUser.assignedParkingLot,
             };
             setCurrentUser(refreshedUser);
             window.localStorage.setItem(SESSION_KEY, JSON.stringify(refreshedUser));
@@ -1964,8 +1982,25 @@ export default function App() {
 
   const handleAssignStaffToLot = async (userId: string, lotName: string): Promise<boolean> => {
     try {
-      const updated = await userService.updateUser(userId, { assignedParkingLot: lotName });
-      setUsers((prev) => prev.map((u) => (u.id === userId ? toAppUser(updated) : u)));
+      // users trong state giữ id local (vd. 'DEMO-STF') sau khi merge với API theo
+      // email — còn PUT /api/users/:id cần id số thật trong DB. Tra id thật theo
+      // email trước; không tra được (backend offline) thì thử id hiện có.
+      const target = users.find((u) => u.id === userId);
+      let apiId = userId;
+      if (target) {
+        try {
+          const remote = await userService.fetchUsers();
+          const match = remote.find(
+            (r) => r.email.toLowerCase() === target.email.toLowerCase(),
+          );
+          if (match) apiId = String(match.id);
+        } catch {
+          // backend offline — dùng id local, updateUser sẽ tự báo lỗi nếu sai
+        }
+      }
+      const updated = await userService.updateUser(apiId, { assignedParkingLot: lotName });
+      // Giữ id local để các filter theo userId (đặt chỗ, xe...) không gãy
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...toAppUser(updated), id: u.id } : u)));
       return true;
     } catch (error) {
       alert(error instanceof Error ? error.message : "Không thể phân công nhân viên.");
@@ -2245,8 +2280,6 @@ export default function App() {
     switch (view) {
       case "myparking":
         return "Trang của tôi";
-      case "session":
-        return "Lượt gửi hiện tại";
       case "reservations":
         return "Đặt chỗ của tôi";
       case "payments":
@@ -2455,6 +2488,7 @@ export default function App() {
             feedbacks={feedbacksWithNames}
             users={users}
             onUpdateUser={handleUpdateProfile}
+            onCheckOutSession={handleCheckOutSession}
             onForceClearSlot={handleForceClearSlot}
             onSetSlotStatus={handleSetSlotStatus}
             onConfirmReservation={(id) => {
@@ -2559,7 +2593,6 @@ export default function App() {
               {/* Driver-Specific Pages with a standard profile layout */}
               {[
                 "myparking",
-                "session",
                 "reservations",
                 "payments",
                 "feedback",
@@ -2590,7 +2623,6 @@ export default function App() {
                       <nav className="space-y-1">
                         {[
                           { key: "myparking", label: "Trang của tôi" },
-                          { key: "session", label: "Lượt gửi hiện tại" },
                           { key: "reservations", label: "Đặt chỗ của tôi" },
                           { key: "payments", label: "Thanh toán" },
                           { key: "feedback", label: "Phản hồi / Hỗ trợ" },
@@ -2622,7 +2654,6 @@ export default function App() {
                       <p className="mb-2 px-1 text-[9px] font-bold uppercase tracking-widest text-slate-400">Lối tắt nhanh</p>
                       <div className="space-y-1">
                         {[
-                          { key: "session", label: "Lượt gửi hiện tại" },
                           { key: "slots",   label: "Đặt chỗ gửi xe" },
                         ].map((item) => (
                           <button
@@ -2694,28 +2725,6 @@ export default function App() {
                           addHiddenResIds(ids);
                           setReservations((prev) => prev.filter((r) => !ids.includes(r.id)));
                           ids.forEach((id) => apiUpdateReservation(id, { status: 'Completed' }).catch(() => {}));
-                        }}
-                      />
-                    )}
-                    {currentView === "session" && (
-                      <CurrentSessionPage
-                        currentSession={currentSession}
-                        setView={setView}
-                        onCheckOutSession={handleCheckOutSession}
-                        pricingRules={pricingRules}
-                        currentUser={currentUser}
-                        slots={slots}
-                        payments={payments}
-                        reservations={reservations.filter((r) => r.userId === currentUser.id)}
-                        savedVehicles={savedVehicles}
-                        onDismissSession={() => {
-                          setCurrentSession((prev) => ({
-                            ...prev,
-                            ticketCode: '',
-                            sessionStatus: 'Cancelled',
-                            paymentStatus: 'Unpaid',
-                            barrierStatus: 'Closed',
-                          }));
                         }}
                       />
                     )}

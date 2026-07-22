@@ -10,7 +10,7 @@ import {
   ParkingCircle,
   UserCircle2,
 } from 'lucide-react';
-import type { User, Slot, Reservation, Payment, PricingRule, VehicleKey, Feedback, SlotIssue } from '../../data/mockData';
+import type { User, Slot, Reservation, Payment, PricingRule, VehicleKey, Feedback, SlotIssue, ParkingSession } from '../../data/mockData';
 import type { Gate, ScanEvent, AccessLog, EmergencyLog, IncidentType } from '../../types/staff';
 import {
   initialGates,
@@ -24,8 +24,10 @@ import ActivityLog from './ActivityLog';
 import EmergencyReport from './EmergencyReport';
 import StaffManagerChat from '../../components/StaffManagerChat';
 import RoleProfilePage from '../../components/RoleProfilePage';
+import CurrentSessionPage from '../driver/CurrentSession';
 import { perVisitOverstay, overstayDue, isReservationPaid } from '../../utils/reservationPricing';
 import { formatCurrency } from '../../utils/helpers';
+import { lotKeyOf, lotKeyOrDefault } from '../../utils/parkingLots';
 
 interface StaffDashboardProps {
   currentUser: User;
@@ -46,19 +48,46 @@ interface StaffDashboardProps {
   onForceClearSlot?: (slotCode: string, reason: string) => Promise<boolean>;
   onSetSlotStatus?: (slotCode: string, status: Slot['status']) => Promise<boolean>;
   onUpdateUser?: (up: Partial<User>) => Promise<{ ok: boolean; error?: string }>;
+  /** Trả xe/thu phí một lượt gửi — dùng cho trang "Theo dõi bãi xe". */
+  onCheckOutSession?: (
+    ticketCode: string,
+    paymentMethod: 'Cash' | 'Card' | 'E-Wallet' | 'QR Banking' | 'Crypto' | 'VNPay',
+    finalAmount: number,
+    showAlert?: boolean,
+  ) => boolean;
 }
 
-const STAFF_ROUTES = ['staffdashboard', 'gatecontrol', 'activitylog', 'emergency', 'profile'];
+const STAFF_ROUTES = ['staffdashboard', 'gatecontrol', 'parkingmonitor', 'activitylog', 'emergency', 'profile'];
 
 const menuItems = [
   { key: 'staffdashboard', label: 'Bảng điều khiển',   icon: LayoutDashboard              },
   { key: 'gatecontrol',    label: 'Điều khiển cổng',   icon: DoorClosed                   },
+  { key: 'parkingmonitor', label: 'Theo dõi bãi xe',   icon: ParkingCircle                },
   { key: 'activitylog',    label: 'Nhật ký hoạt động', icon: ScrollText                   },
   { key: 'emergency',      label: 'Quản lý Sự cố',      icon: AlertTriangle, danger: true  },
 ];
 
 const nowLabel = () =>
   new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+// Staff không có lượt gửi cá nhân — "Theo dõi bãi xe" chạy CurrentSession ở
+// chế độ toàn-khách: mọi xe Checked-in trong bãi hiện thành phiên ảo chọn được.
+const EMPTY_SESSION: ParkingSession = {
+  id: '',
+  userId: '',
+  ticketCode: '',
+  licensePlate: '',
+  vehicleType: 'car',
+  checkInTime: '',
+  entryGate: '',
+  floor: '',
+  area: '',
+  slotCode: '',
+  estimatedFee: 0,
+  paymentStatus: 'Unpaid',
+  sessionStatus: 'Cancelled',
+  barrierStatus: 'Closed',
+};
 
 let logSeq = 0;
 const newLogId = () => `AL-live-${Date.now()}-${logSeq++}`;
@@ -67,8 +96,8 @@ export default function StaffDashboard({
   currentUser,
   setView,
   currentView,
-  slots,
-  reservations,
+  slots: allSlots,
+  reservations: allReservations,
   payments,
   pricingRules,
   feedbacks,
@@ -82,7 +111,23 @@ export default function StaffDashboard({
   onForceClearSlot,
   onSetSlotStatus,
   onUpdateUser,
+  onCheckOutSession,
 }: StaffDashboardProps) {
+  // ── Phân quyền theo bãi ─────────────────────────────────────────────────────
+  // Staff chỉ thấy và xử lý dữ liệu (ô đỗ, đặt chỗ, thông báo...) của bãi mình
+  // được gán (users.assigned_parking_lot). Cô lập tuyệt đối: chưa được gán bãi
+  // → KHÔNG thấy dữ liệu bãi nào (banner bên dưới hướng dẫn liên hệ quản lý),
+  // tuyệt đối không fallback về "thấy tất cả" để tránh lọt thông báo chéo bãi.
+  const staffLotKey = lotKeyOf(currentUser.assignedParkingLot);
+  const slots = React.useMemo(
+    () => (staffLotKey ? allSlots.filter((s) => lotKeyOrDefault(s.parkingLot) === staffLotKey) : []),
+    [allSlots, staffLotKey],
+  );
+  const reservations = React.useMemo(
+    () => (staffLotKey ? allReservations.filter((r) => lotKeyOrDefault(r.parkingLot) === staffLotKey) : []),
+    [allReservations, staffLotKey],
+  );
+
   const [gates] = useState<Gate[]>(initialGates);
   const [accessLogs, setAccessLogs] = useState<AccessLog[]>(initialAccessLogs);
   const [liveScans, setLiveScans] = useState<ScanEvent[]>([]);
@@ -406,16 +451,36 @@ export default function StaffDashboard({
           <GateControl
             gates={gates}
             liveScans={liveScans}
-            accessLogs={accessLogs}
             iotStatus={iotStatus}
             iotTransport={iotTransport}
             pricingRules={pricingRules}
             currentUser={currentUser}
+            reservations={reservations}
+            payments={payments}
             onConfirmScan={handleConfirmScan}
             onDenyScan={handleDenyScan}
             onManualEntry={handleManualEntry}
             onRfidVerified={handleRfidVerified}
-            onNavigate={setView}
+            onGateCommand={(gateId, command) => Boolean(sendCommand(gateId, command))}
+            onAlarm={(description) => handleSubmitEmergency('Other', description)}
+            addToast={addToast}
+          />
+        );
+      case 'parkingmonitor':
+        // Toàn bộ chức năng "Lượt gửi hiện tại" của user, chạy trong cổng staff:
+        // reservations là của MỌI khách trong bãi phụ trách (đã lọc theo bãi).
+        return (
+          <CurrentSessionPage
+            title="Theo dõi bãi xe"
+            subtitle="Theo dõi & quản lý toàn bộ lượt gửi hiện tại của khách — giờ vào, ô đỗ, phí tạm tính và trả xe"
+            currentSession={EMPTY_SESSION}
+            setView={setView}
+            onCheckOutSession={onCheckOutSession ?? (() => false)}
+            pricingRules={pricingRules}
+            currentUser={currentUser}
+            slots={slots}
+            payments={payments}
+            reservations={reservations}
           />
         );
       case 'activitylog':
@@ -466,6 +531,7 @@ export default function StaffDashboard({
             onSubmitEmergency={handleSubmitEmergency}
             addToast={addToast}
             onSetSlotStatus={onSetSlotStatus}
+            assignedLot={currentUser.assignedParkingLot}
           />
         );
     }
@@ -497,7 +563,11 @@ export default function StaffDashboard({
           </div>
           <div className="min-w-0">
             <p className="truncate text-xs font-bold text-slate-800">{menuItems.find(m => m.key === currentView)?.label ?? 'Bảng điều khiển'}</p>
-            <p className="truncate text-[10px] text-slate-400">Nhà ga A · Cổng 2</p>
+            <p className="truncate text-[10px] text-slate-400">
+              {currentUser.assignedParkingLot
+                ? `Bãi phụ trách: ${currentUser.assignedParkingLot}`
+                : 'Chưa gán bãi phụ trách'}
+            </p>
           </div>
         </div>
 
@@ -676,7 +746,22 @@ export default function StaffDashboard({
           </div>
         </header>
 
-        <main className="p-6">{renderContent()}</main>
+        <main className="p-6">
+          {/* Staff chưa được phân công bãi → toàn bộ dữ liệu rỗng, báo rõ lý do */}
+          {!staffLotKey && (
+            <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <Bell className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+              <div>
+                <p className="text-sm font-bold text-amber-800">Bạn chưa được phân công bãi xe</p>
+                <p className="mt-0.5 text-xs text-amber-700">
+                  Dữ liệu ô đỗ, đặt chỗ và thông báo chỉ hiển thị sau khi Quản lý gán bạn phụ trách
+                  một bãi (Quản lý Bãi xe → Nhân viên phụ trách). Vui lòng liên hệ Quản lý.
+                </p>
+              </div>
+            </div>
+          )}
+          {renderContent()}
+        </main>
       </div>
 
       {/* New booking alert popup */}

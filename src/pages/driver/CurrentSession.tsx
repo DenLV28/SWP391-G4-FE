@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, BadgeInfo, Car, CheckCircle, Clock, Lock, MapPin, Ticket, Unlock, X } from 'lucide-react';
+import { AlertTriangle, BadgeInfo, Car, CheckCircle, Clock, Lock, MapPin, Search, Ticket, Unlock, X } from 'lucide-react';
 import { ParkingSession, PricingRule, Reservation, SavedVehicle, User, Slot, Payment } from '../../data/mockData';
 import StatusBadge from '../../components/StatusBadge';
 import EmptyState from '../../components/EmptyState';
@@ -21,6 +21,9 @@ interface CurrentSessionProps {
   reservations?: Reservation[];
   savedVehicles?: SavedVehicle[];
   onDismissSession?: () => void;
+  /** Tiêu đề trang — cổng Staff dùng lại component này dưới tên "Theo dõi bãi xe". */
+  title?: string;
+  subtitle?: string;
 }
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -90,6 +93,8 @@ export default function CurrentSession({
   reservations = [],
   savedVehicles: _savedVehicles = [],
   onDismissSession,
+  title = 'Lượt gửi hiện tại',
+  subtitle = 'Theo dõi giờ vào, ô đỗ, phí tạm tính và thao tác khi xe ra',
 }: CurrentSessionProps) {
   // All currently parked vehicles for this user
   const checkedInVehicles = useMemo(
@@ -105,6 +110,14 @@ export default function CurrentSession({
 
   // Default selection = primary session vehicle (or first)
   const [selectedIdx, setSelectedIdx] = useState<number>(() => Math.max(0, primaryIdx));
+
+  // Tìm biển số — lọc thẻ xe hiển thị (bỏ qua dấu gạch/chấm khi so khớp)
+  const [plateSearch, setPlateSearch] = useState('');
+  const normPlate = (p: string) => p.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const searchHits = useMemo(() => {
+    const q = normPlate(plateSearch);
+    return checkedInVehicles.filter((r) => !q || normPlate(r.licensePlate).includes(q));
+  }, [checkedInVehicles, plateSearch]);
 
   // Keep selection in sync if reservations change (e.g. a vehicle checks out)
   useEffect(() => {
@@ -346,10 +359,7 @@ export default function CurrentSession({
 
   return (
     <div className="space-y-6">
-      <SectionTitle
-        title="Lượt gửi hiện tại"
-        subtitle="Theo dõi giờ vào, ô đỗ, phí tạm tính và thao tác khi xe ra"
-      />
+      <SectionTitle title={title} subtitle={subtitle} />
 
       {/* ── VEHICLE PICKER (only shown when ≥ 1 parked vehicle) ── */}
       {checkedInVehicles.length > 0 && (
@@ -368,8 +378,28 @@ export default function CurrentSession({
             </span>
           </div>
 
+          {/* Tìm biển số → xem loại xe & vị trí đỗ */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={plateSearch}
+              onChange={(e) => setPlateSearch(e.target.value.toUpperCase())}
+              placeholder="Tìm biển số xe (vd: 29C1-38383)..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm uppercase tracking-wider focus:border-blue-400 focus:bg-white focus:outline-none"
+            />
+          </div>
+          {plateSearch && (
+            <p className="mb-3 text-[11px] text-slate-400">
+              {searchHits.length > 0
+                ? `Tìm thấy ${searchHits.length} xe khớp "${plateSearch}"`
+                : `Không có xe nào khớp "${plateSearch}"`}
+            </p>
+          )}
+
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {checkedInVehicles.map((res, idx) => {
+              // Ẩn thẻ không khớp ô tìm kiếm (giữ nguyên idx thật để chọn đúng xe)
+              if (plateSearch && !searchHits.includes(res)) return null;
               const isSelected = idx === selectedIdx;
               const isThisPrimary =
                 hasSession && res.licensePlate === currentSession.licensePlate;
@@ -659,7 +689,7 @@ export default function CurrentSession({
                   onClick={openCheckout}
                   className="cursor-pointer rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-indigo-500"
                 >
-                  Mô phỏng quét khi ra
+                  Cho xe ra
                 </button>
               </>
             )}

@@ -229,13 +229,6 @@ export default function MyParking({ user, setView, currentSession, reservations,
                       </div>
                     </div>
 
-                    {matchedSession && (
-                      <div className="pt-1">
-                        <button onClick={() => setView('session')} className="rounded-lg border border-blue-200 bg-white px-4 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 transition">
-                          Xem chi tiết vé gửi →
-                        </button>
-                      </div>
-                    )}
                   </div>
                 );
               })}
