@@ -14,10 +14,17 @@ const Navbar: React.FC = () => {
         <span className="text-blue-600 font-bold text-lg">ParkFlow</span>
         <nav className="hidden md:flex gap-4 ml-6 text-sm">
           <Link to="/" className={location.pathname === "/" ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-1" : "hover:text-blue-600"}>Trang chủ</Link>
+<<<<<<< HEAD
+          <Link to="/dat-cho" className={location.pathname === "/dat-cho" ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-1" : "hover:text-blue-600"}>Đặt chỗ</Link>
+          <Link to="/bang-gia" className={location.pathname === "/bang-gia" ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-1" : "hover:text-blue-600"}>Bảng giá</Link>
+          <Link to="/lien-he" className={location.pathname === "/lien-he" ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-1" : "hover:text-blue-600"}>Liên hệ</Link>
+          <Link to="/gioi-thieu" className={location.pathname === "/gioi-thieu" ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-1" : "hover:text-blue-600"}>Giới thiệu</Link>
+=======
           <Link to="/gioi-thieu" className={location.pathname === "/gioi-thieu" ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-1" : "hover:text-blue-600"}>Giới thiệu</Link>
           <Link to="/bang-gia" className={location.pathname === "/bang-gia" ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-1" : "hover:text-blue-600"}>Bảng giá</Link>
           <Link to="/lien-he" className={location.pathname === "/lien-he" ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-1" : "hover:text-blue-600"}>Liên hệ</Link>
           <Link to="/dat-cho" className={location.pathname === "/dat-cho" ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-1" : "hover:text-blue-600"}>Đặt chỗ</Link>
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
         </nav>
       </div>
       <div className="flex gap-2">

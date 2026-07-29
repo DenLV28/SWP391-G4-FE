@@ -9,6 +9,10 @@ import {
   Key, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Mail, Phone, Users, ShieldAlert, Sparkles
 } from 'lucide-react';
 import { LoginForm, FormErrors } from '../types';
+<<<<<<< HEAD
+import authService from '../services/authService';
+=======
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
 
 interface LoginViewProps {
   onSuccess: (data: LoginForm) => void;
@@ -56,15 +60,57 @@ export default function LoginView({ onSuccess, onNavigateToRegister, onShowModal
     return Object.keys(tempErrors).length === 0;
   };
 
+<<<<<<< HEAD
+  const handleSubmit = async (e: React.FormEvent) => {
+=======
   const handleSubmit = (e: React.FormEvent) => {
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
     e.preventDefault();
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+<<<<<<< HEAD
+    
+    try {
+      // Call API to authenticate user from database
+      const response = await authService.login({
+        identifier: form.identifier,
+        password: form.password,
+      });
+
+      // Store auth token if needed
+      if (form.rememberMe) {
+        authService.setAuthToken(JSON.stringify(response.user));
+      }
+
+      // Clear form and pass response to parent component
+      setErrors({});
+      setForm({
+        identifier: '',
+        password: '',
+        rememberMe: false,
+      });
+
+      // Call parent's onSuccess with user data
+      onSuccess({
+        ...form,
+        identifier: form.identifier // preserve identifier for display
+      });
+    } catch (error) {
+      // Handle API errors
+      const errorMessage = error instanceof Error ? error.message : 'Đăng nhập thất bại';
+      setErrors({
+        general: errorMessage,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+=======
     setTimeout(() => {
       setIsSubmitting(false);
       onSuccess(form);
     }, 1200);
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
   };
 
   const handleForgotPassword = (e: React.MouseEvent) => {
@@ -164,6 +210,23 @@ export default function LoginView({ onSuccess, onNavigateToRegister, onShowModal
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
+<<<<<<< HEAD
+          {/* General error message */}
+          {errors.general && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <svg className="h-5 w-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-red-800">{errors.general}</p>
+              </div>
+            </div>
+          )}
+          
+=======
+>>>>>>> 344a747c9562c30e6e5b6d29f6b2b91e3e69baf3
           {/* Identifier Input */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-700 block">Số điện thoại hoặc Biển số xe</label>
