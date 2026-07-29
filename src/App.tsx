@@ -6,15 +6,7 @@ import { AdminSidebar, DriverSidebar } from "./components/Sidebar";
 import PublicNavbar from "./components/PublicNavbar";
 import Footer from "./components/Footer";
 
-// Public pages
-import Homepage from "./pages/public/Homepage";
-import ContactPage from "./components/ContactPage";
-import ParkingInformation from "./pages/public/ParkingInformation";
-import AvailableSlotsPage from "./pages/public/AvailableSlots";
-import PricingRulesPage from "./pages/public/PricingRules";
-import PricingDetail from "./pages/public/PricingDetail";
-import LoginPage from "./pages/public/Login";
-import RegisterPage from "./pages/public/Register";
+
 
 // Driver pages
 import MyParking from "./pages/driver/MyParking";
